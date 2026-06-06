@@ -39,7 +39,7 @@ public class ServerNetworkEventHooks {
                 } else {
                     Bindable.get(player.getMainHandItem()).ifPresent(bindable -> {
                         Search.forQuadWithBindId(
-                                        player.getLevel(),
+                                        player.level(),
                                         player.getCamera().position(),
                                         bindable.getBindId(),
                                         server.getPlayerList().getViewDistance() * 16)

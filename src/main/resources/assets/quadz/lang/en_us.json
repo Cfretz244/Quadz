@@ -5,6 +5,10 @@
   "item.quadz.goggles" : "Goggles",
   "item.quadz.remote" : "Remote",
 
+  "template.quadz.pixel" : "Pixel",
+  "template.quadz.voyager" : "Voyager",
+  "template.quadz.voxel_racer_one" : "Voxel Racer 1",
+
   "quadz.message.bound" : "Quadcopter Bound",
 
   "quadz.config.title" : "Quadz Config",

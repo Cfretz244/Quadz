@@ -1,6 +1,6 @@
 package dev.lazurite.quadz.client.render.screen;
 
-import com.mojang.blaze3d.vertex.PoseStack;
+import net.minecraft.client.gui.GuiGraphics;
 import dev.lazurite.quadz.Quadz;
 import dev.lazurite.quadz.client.Config;
 import dev.lazurite.quadz.client.render.screen.osd.OnScreenDisplay;
@@ -173,19 +173,19 @@ public class ControllerSetupScreen extends Screen {
     }
 
     @Override
-    public void render(PoseStack poseStack, int i, int j, float f) {
-        super.renderDirtBackground(0);
-        super.render(poseStack, i, j, f);
+    public void render(GuiGraphics guiGraphics, int i, int j, float f) {
+        super.renderDirtBackground(guiGraphics);
+        super.render(guiGraphics, i, j, f);
 
         var pitch = JoystickOutput.getAxisValue(null, Config.pitch, this.pitchLocation, Config.pitchInverted, false);
         var yaw = JoystickOutput.getAxisValue(null, Config.yaw, this.yawLocation, Config.yawInverted, false);
         var roll = JoystickOutput.getAxisValue(null, Config.roll, this.rollLocation, Config.rollInverted, false);
         var throttle = JoystickOutput.getAxisValue(null, Config.throttle, this.throttleLocation, Config.throttleInverted, Config.throttleInCenter) + 1.0f;
-        OnScreenDisplay.renderSticks(poseStack, f, width / 2, height / 2 + 20, 40, 10, pitch, yaw, roll, throttle);
+        OnScreenDisplay.renderSticks(guiGraphics, f, width / 2, height / 2 + 20, 40, 10, pitch, yaw, roll, throttle);
 
         // An axis has been selected. Time to listen...
         if (this.axisConsumer != null) {
-            drawCenteredString(poseStack, this.font, Component.translatable("quadz.config.controller_setup.prompt"), this.width / 2, 85, 0x00FF00);
+            guiGraphics.drawCenteredString(this.font, Component.translatable("quadz.config.controller_setup.prompt"), this.width / 2, 85, 0x00FF00);
         }
     }
 

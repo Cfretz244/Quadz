@@ -2,7 +2,7 @@ package dev.lazurite.quadz.client.render;
 
 import com.jme3.math.Quaternion;
 import com.jme3.math.Vector3f;
-import com.mojang.blaze3d.vertex.PoseStack;
+import net.minecraft.client.gui.GuiGraphics;
 import dev.lazurite.corduroy.api.View;
 import dev.lazurite.form.api.loader.TemplateLoader;
 import dev.lazurite.form.impl.common.template.model.Template;
@@ -70,7 +70,7 @@ public class QuadcopterView extends View implements View.Ticking {
         }
     }
 
-    public void onGuiRender(PoseStack poseStack, float tickDelta) {
+    public void onGuiRender(GuiGraphics guiGraphics, float tickDelta) {
         var firstPerson = Minecraft.getInstance().options.getCameraType().isFirstPerson();
 
         if (firstPerson && Config.fisheyeEnabled) {
@@ -78,8 +78,8 @@ public class QuadcopterView extends View implements View.Ticking {
         }
 
         if (Config.osdEnabled) {
-            this.osd.renderVelocity(poseStack, tickDelta);
-            this.osd.renderSticks(poseStack, tickDelta);
+            this.osd.renderVelocity(guiGraphics, tickDelta);
+            this.osd.renderSticks(guiGraphics, tickDelta);
         }
 
         if (firstPerson && Config.videoInterferenceEnabled) {

@@ -57,7 +57,6 @@ import java.util.Optional;
 
 public class Quadcopter extends LivingEntity implements EntityPhysicsElement, Templated, GeoEntity, Bindable {
 
-    public static final DamageSource PROP_DAMAGE = new DamageSource("quadcopter").setProjectile().damageHelmet();
     public static final EntityDataAccessor<String> TEMPLATE = SynchedEntityData.defineId(Quadcopter.class, EntityDataSerializers.STRING);
     public static final EntityDataAccessor<String> PREV_TEMPLATE = SynchedEntityData.defineId(Quadcopter.class, EntityDataSerializers.STRING);
     public static final EntityDataAccessor<Boolean> ARMED = SynchedEntityData.defineId(Quadcopter.class, EntityDataSerializers.BOOLEAN);
@@ -85,7 +84,7 @@ public class Quadcopter extends LivingEntity implements EntityPhysicsElement, Te
             this.refreshDimensions();
         }
 
-        if (!this.level.isClientSide) {
+        if (!this.level().isClientSide) {
             // Server-side only prioritization
             Optional.ofNullable(getRigidBody().getPriorityPlayer()).ifPresent(player -> {
                 if (!((ServerPlayer) player).getCamera().equals(this)) {
@@ -95,16 +94,16 @@ public class Quadcopter extends LivingEntity implements EntityPhysicsElement, Te
 
             // Break grass, flowers, etc if the quadcopter is above a certain weight.
             if (this.getRigidBody().getMass() > 0.1f) {
-                var block = this.level.getBlockState(this.blockPosition()).getBlock();
+                var block = this.level().getBlockState(this.blockPosition()).getBlock();
 
                 if (block instanceof BushBlock || block instanceof VineBlock) {
-                    this.level.destroyBlock(this.blockPosition(), false, this);
+                    this.level().destroyBlock(this.blockPosition(), false, this);
                 }
             }
 
             // Hurt entities on collision
-            this.level.getEntities(this, this.getBoundingBox(), entity -> entity instanceof LivingEntity).forEach(entity -> {
-                entity.hurt(PROP_DAMAGE, 2.0f);
+            this.level().getEntities(this, this.getBoundingBox(), entity -> entity instanceof LivingEntity).forEach(entity -> {
+                entity.hurt(this.damageSources().flyIntoWall(), 2.0f);
             });
         }
 
@@ -161,7 +160,7 @@ public class Quadcopter extends LivingEntity implements EntityPhysicsElement, Te
         }, () -> {
             this.setArmed(false);
 
-            if (!this.level.isClientSide) {
+            if (!this.level().isClientSide) {
                 this.getRigidBody().prioritize(null);
             }
         });
@@ -192,7 +191,7 @@ public class Quadcopter extends LivingEntity implements EntityPhysicsElement, Te
 
     @Override
     public InteractionResult interact(Player player, InteractionHand hand) {
-        if (!level.isClientSide()) {
+        if (!level().isClientSide()) {
             final var stack = player.getInventory().getSelected();
 
             if (stack.getItem() instanceof RemoteItem) {
@@ -215,7 +214,7 @@ public class Quadcopter extends LivingEntity implements EntityPhysicsElement, Te
 
     @Override
     public boolean hurt(@NotNull DamageSource source, float amount) {
-        if (!level.isClientSide() && source.getEntity() instanceof ServerPlayer) {
+        if (!level().isClientSide() && source.getEntity() instanceof ServerPlayer) {
             this.kill();
             return true;
         }

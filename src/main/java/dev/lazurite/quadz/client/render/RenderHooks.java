@@ -43,8 +43,6 @@ public class RenderHooks {
     private static long next;
 
     public static void onRenderMinecraft(ProfilerFiller profiler) {
-        profiler.popPush("gamepadInput");
-
         if (System.currentTimeMillis() > next) {
             Map<Integer, String> lastJoysticks = Maps.newHashMap(JoystickOutput.JOYSTICKS);
             JoystickOutput.JOYSTICKS.clear();

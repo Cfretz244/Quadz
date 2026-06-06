@@ -45,7 +45,7 @@ public class QuadzClient implements ClientModInitializer {
         var player = Minecraft.getInstance().player;
 
         if (player != null) {
-            return Bindable.get(player.getMainHandItem()).flatMap(remote -> Search.forQuadWithBindId(player.level, player.position(), remote.getBindId(), 256));
+            return Bindable.get(player.getMainHandItem()).flatMap(remote -> Search.forQuadWithBindId(player.level(), player.position(), remote.getBindId(), 256));
         }
 
         return Optional.empty();

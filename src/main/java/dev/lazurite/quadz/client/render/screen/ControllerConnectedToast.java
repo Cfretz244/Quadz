@@ -1,12 +1,10 @@
 package dev.lazurite.quadz.client.render.screen;
 
-import com.mojang.blaze3d.systems.RenderSystem;
-import com.mojang.blaze3d.vertex.PoseStack;
 import dev.lazurite.quadz.Quadz;
 import net.minecraft.client.Minecraft;
+import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.toasts.Toast;
 import net.minecraft.client.gui.components.toasts.ToastComponent;
-import net.minecraft.client.renderer.GameRenderer;
 import net.minecraft.network.chat.Component;
 import net.minecraft.world.item.ItemStack;
 
@@ -26,15 +24,11 @@ public class ControllerConnectedToast implements Toast {
     }
 
     @Override
-    public Visibility render(PoseStack poseStack, ToastComponent toastComponent, long startTime) {
-        RenderSystem.setShader(GameRenderer::getPositionTexShader);
-        RenderSystem.setShaderTexture(0, TEXTURE);
-        RenderSystem.setShaderColor(1.0F, 1.0F, 1.0F, 1.0F);
-
-        toastComponent.blit(poseStack, 0, 0, 0, 0, width(), height());
-        toastComponent.getMinecraft().font.draw(poseStack, message, 30, 7, -1);
-        toastComponent.getMinecraft().font.draw(poseStack, Component.literal(controllerName), 30, 18, -1);
-        toastComponent.getMinecraft().getItemRenderer().renderAndDecorateFakeItem(new ItemStack(Quadz.REMOTE_ITEM), 8, 8);
+    public Visibility render(GuiGraphics guiGraphics, ToastComponent toastComponent, long startTime) {
+        guiGraphics.blit(TEXTURE, 0, 0, 0, 0, width(), height());
+        guiGraphics.drawString(toastComponent.getMinecraft().font, message, 30, 7, -1, false);
+        guiGraphics.drawString(toastComponent.getMinecraft().font, Component.literal(controllerName), 30, 18, -1, false);
+        guiGraphics.renderFakeItem(new ItemStack(Quadz.REMOTE_ITEM), 8, 8);
 
         return startTime >= 5000L ? Visibility.HIDE : Visibility.SHOW;
     }

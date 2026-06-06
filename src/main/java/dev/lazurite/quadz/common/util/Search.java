@@ -55,7 +55,7 @@ public interface Search {
      * @return a {@link List} of {@link Quadcopter} objects
      */
     static List<Quadcopter> forAllWithinRange(Level level, Vec3 origin, int range) {
-        return level.getEntitiesOfClass(Quadcopter.class, new AABB(new BlockPos(origin)).inflate(range), entity -> true);
+        return level.getEntitiesOfClass(Quadcopter.class, new AABB(BlockPos.containing(origin)).inflate(range), entity -> true);
     }
 
     /**
@@ -68,7 +68,7 @@ public interface Search {
      */
     static Optional<Quadcopter> forQuadWithBindId(Level level, Vec3 origin, int bindId, int range) {
         var entities = level.getEntities((Entity) null,
-                new AABB(new BlockPos(origin)).inflate(range),
+                new AABB(BlockPos.containing(origin)).inflate(range),
                 entity -> entity instanceof Quadcopter quadcopter && quadcopter.isBoundTo(bindId));
         return entities.size() > 0 ? Optional.of((Quadcopter) entities.get(0)) : Optional.empty();
     }
@@ -86,7 +86,7 @@ public interface Search {
                 Quadcopter.class,
                 TargetingConditions.DEFAULT.selector(predicate),
                 null, origin.x, origin.y, origin.z,
-                new AABB(new BlockPos(origin)).inflate(range)));
+                new AABB(BlockPos.containing(origin)).inflate(range)));
     }
 
     /**
@@ -95,8 +95,8 @@ public interface Search {
      * @return the matching {@link Player}
      */
     static Optional<? extends Player> forPlayer(Quadcopter quadcopter) {
-        if (quadcopter.getLevel().isClientSide()) {
-            return quadcopter.getLevel().players().stream()
+        if (quadcopter.level().isClientSide()) {
+            return quadcopter.level().players().stream()
                     .filter(player -> Bindable.get(player.getMainHandItem(), quadcopter).isPresent() && player.getMainHandItem().getItem() == Quadz.REMOTE_ITEM)
                     .findFirst();
         }

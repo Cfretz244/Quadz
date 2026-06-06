@@ -29,7 +29,7 @@ public class PlayerHooks {
     }
 
     public static void onSyncJoystick(Player player) {
-        var level = player.level;
+        var level = player.level();
         var joysticks = new HashMap<>(joystickValues);
 
         if (level.isClientSide()) {

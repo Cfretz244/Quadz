@@ -1,18 +1,17 @@
 package dev.lazurite.quadz.client.render.screen.osd;
 
 import com.jme3.math.Vector3f;
-import com.mojang.blaze3d.vertex.PoseStack;
 import dev.lazurite.quadz.Quadz;
 import dev.lazurite.quadz.client.Config;
 import dev.lazurite.quadz.common.entity.Quadcopter;
 import dev.lazurite.quadz.common.util.Search;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.Font;
-import net.minecraft.client.gui.GuiComponent;
+import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
 
-public class OnScreenDisplay extends GuiComponent {
+public class OnScreenDisplay {
 
     private final Quadcopter quadcopter;
     private final Font font;
@@ -22,16 +21,16 @@ public class OnScreenDisplay extends GuiComponent {
         this.font = Minecraft.getInstance().font;
     }
 
-    public void renderVelocity(PoseStack poseStack, float tickDelta) {
+    public void renderVelocity(GuiGraphics guiGraphics, float tickDelta) {
         var client = Minecraft.getInstance();
         var height = client.getWindow().getGuiScaledHeight() - 25;
         var unit = Config.velocityUnit;
         final var vel = Math.round(quadcopter.getRigidBody().getLinearVelocity(new Vector3f()).length() * unit.getFactor() * 10) / 10f;
         final var velocity = Component.literal(vel + " " + unit.getAbbreviation());
-        font.drawShadow(poseStack, velocity, 25, height, 0xFFFFFFFF);
+        guiGraphics.drawString(font, velocity, 25, height, 0xFFFFFFFF, true);
     }
 
-    public void renderSticks(PoseStack poseStack, float tickDelta) {
+    public void renderSticks(GuiGraphics guiGraphics, float tickDelta) {
         Search.forPlayer(quadcopter).ifPresent(player -> {
             var pitch = player.quadz$getJoystickValue(new ResourceLocation(Quadz.MODID, "pitch"));
             var yaw = player.quadz$getJoystickValue(new ResourceLocation(Quadz.MODID, "yaw"));
@@ -39,21 +38,21 @@ public class OnScreenDisplay extends GuiComponent {
             var throttle = (player.quadz$getJoystickValue(new ResourceLocation(Quadz.MODID, "throttle")) + 1.0f);
             var width = Minecraft.getInstance().getWindow().getGuiScaledWidth();
             var height = Minecraft.getInstance().getWindow().getGuiScaledHeight();
-            renderSticks(poseStack, tickDelta, width / 2, height - 75, 25, 5, pitch, yaw, roll, throttle);
+            renderSticks(guiGraphics, tickDelta, width / 2, height - 75, 25, 5, pitch, yaw, roll, throttle);
         });
     }
 
-    public static void renderSticks(PoseStack poseStack, float tickDelta, int x, int y, int scale, int spacing, float pitch, float yaw, float roll, float throttle) {
+    public static void renderSticks(GuiGraphics guiGraphics, float tickDelta, int x, int y, int scale, int spacing, float pitch, float yaw, float roll, float throttle) {
         var leftX = x - scale - spacing;
         var rightX = x + scale + spacing;
         var topY = y + scale;
         var bottomY = y - scale;
 
         // Draw crosses
-        fill(poseStack, leftX, bottomY + 1, leftX + 1, topY, 0xFFFFFFFF);
-        fill(poseStack, rightX, bottomY + 1, rightX + 1, topY, 0xFFFFFFFF);
-        fill(poseStack, leftX - scale, y, leftX + scale + 1, y + 1, 0xFFFFFFFF);
-        fill(poseStack, rightX - scale, y, rightX + scale + 1, y + 1, 0xFFFFFFFF);
+        guiGraphics.fill(leftX, bottomY + 1, leftX + 1, topY, 0xFFFFFFFF);
+        guiGraphics.fill(rightX, bottomY + 1, rightX + 1, topY, 0xFFFFFFFF);
+        guiGraphics.fill(leftX - scale, y, leftX + scale + 1, y + 1, 0xFFFFFFFF);
+        guiGraphics.fill(rightX - scale, y, rightX + scale + 1, y + 1, 0xFFFFFFFF);
 
         // Draw stick positions
         int dotSize = 2;
@@ -61,8 +60,8 @@ public class OnScreenDisplay extends GuiComponent {
         int throttleAdjusted = (int) (throttle * scale) - scale;
         int rollAdjusted = (int) (roll * scale);
         int pitchAdjusted = (int) (pitch * scale);
-        fill(poseStack, leftX + yawAdjusted - dotSize, y - throttleAdjusted - dotSize, leftX + yawAdjusted + dotSize, y - throttleAdjusted + dotSize, 0xFFFFFFFF);
-        fill(poseStack, rightX + rollAdjusted - dotSize, y - pitchAdjusted - dotSize, rightX + rollAdjusted + dotSize, y - pitchAdjusted + dotSize, 0xFFFFFFFF);
+        guiGraphics.fill(leftX + yawAdjusted - dotSize, y - throttleAdjusted - dotSize, leftX + yawAdjusted + dotSize, y - throttleAdjusted + dotSize, 0xFFFFFFFF);
+        guiGraphics.fill(rightX + rollAdjusted - dotSize, y - pitchAdjusted - dotSize, rightX + rollAdjusted + dotSize, y - pitchAdjusted + dotSize, 0xFFFFFFFF);
     }
 
 }

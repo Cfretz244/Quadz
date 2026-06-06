@@ -33,7 +33,7 @@ public class GogglesItem extends ArmorItem implements GeoItem {
     public GogglesItem() {
         super(
                 ArmorMaterials.LEATHER,
-                EquipmentSlot.HEAD,
+                ArmorItem.Type.HELMET,
                 new Properties().stacksTo(1)
         );
     }

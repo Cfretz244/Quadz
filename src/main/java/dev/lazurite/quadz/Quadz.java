@@ -15,7 +15,9 @@ import net.fabricmc.fabric.api.itemgroup.v1.ItemGroupEvents;
 import net.fabricmc.fabric.api.object.builder.v1.entity.FabricEntityTypeBuilder;
 import net.minecraft.core.Registry;
 import net.minecraft.core.registries.BuiltInRegistries;
+import net.minecraft.core.registries.Registries;
 import net.minecraft.network.chat.Component;
+import net.minecraft.resources.ResourceKey;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.entity.EntityDimensions;
 import net.minecraft.world.entity.EntityType;
@@ -36,10 +38,12 @@ public class Quadz implements ModInitializer {
     public static final Item GOGGLES_ITEM = Registry.register(BuiltInRegistries.ITEM, new ResourceLocation(MODID, "goggles"), new GogglesItem());
     public static final Item QUADCOPTER_ITEM = Registry.register(BuiltInRegistries.ITEM, new ResourceLocation(MODID, "quadcopter"), new QuadcopterItem());
     public static final Item REMOTE_ITEM = Registry.register(BuiltInRegistries.ITEM, new ResourceLocation(MODID, "remote"), new RemoteItem());
-    public static final CreativeModeTab CREATIVE_MODE_TAB = FabricItemGroup.builder(new ResourceLocation(MODID, "quadz"))
-            .icon(() -> new ItemStack(GOGGLES_ITEM))
-            .title(Component.literal("Quadz"))
-            .build();
+    public static final ResourceKey<CreativeModeTab> CREATIVE_MODE_TAB_KEY = ResourceKey.create(Registries.CREATIVE_MODE_TAB, new ResourceLocation(MODID, "quadz"));
+    public static final CreativeModeTab CREATIVE_MODE_TAB = Registry.register(BuiltInRegistries.CREATIVE_MODE_TAB, CREATIVE_MODE_TAB_KEY,
+            FabricItemGroup.builder()
+                    .icon(() -> new ItemStack(GOGGLES_ITEM))
+                    .title(Component.literal("Quadz"))
+                    .build());
 
     // Entities
     public static final EntityType<Quadcopter> QUADCOPTER = Registry.register(
@@ -59,7 +63,7 @@ public class Quadz implements ModInitializer {
         // Events
         TemplateEvents.ENTITY_TEMPLATE_CHANGED.register(ServerEventHooks::onEntityTemplateChanged);
         TemplateEvents.TEMPLATE_LOADED.register(ServerEventHooks::onTemplateLoaded);
-        ItemGroupEvents.modifyEntriesEvent(CREATIVE_MODE_TAB).register(ServerEventHooks::onRebuildCreativeTab);
+        ItemGroupEvents.modifyEntriesEvent(CREATIVE_MODE_TAB_KEY).register(ServerEventHooks::onRebuildCreativeTab);
 
         // Network events
         PacketRegistry.registerServerbound(Networking.JOYSTICK_INPUT, ServerNetworkEventHooks::onJoystickInput);

@@ -18,14 +18,7 @@ public class MinecraftMixin {
 
     @Shadow private ProfilerFiller profiler;
 
-    @Inject(
-            method = "runTick",
-            at = @At(
-                    value = "INVOKE",
-                    target = "Lnet/minecraft/client/gui/components/toasts/ToastComponent;render(Lcom/mojang/blaze3d/vertex/PoseStack;)V",
-                    shift = At.Shift.AFTER
-            )
-    )
+    @Inject(method = "runTick", at = @At("TAIL"))
     public void runTick$render(boolean bl, CallbackInfo ci) {
         RenderHooks.onRenderMinecraft(this.profiler);
     }
