@@ -2,7 +2,7 @@ package dev.lazurite.quadz.client.render;
 
 import com.jme3.math.Quaternion;
 import com.jme3.math.Vector3f;
-import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.gui.GuiGraphicsExtractor;
 import dev.lazurite.corduroy.api.View;
 import dev.lazurite.form.api.loader.TemplateLoader;
 import dev.lazurite.form.impl.common.template.model.Template;
@@ -61,7 +61,7 @@ public class QuadcopterView extends View implements View.Ticking {
         }
     }
 
-    public void onGuiRender(GuiGraphics guiGraphics, float tickDelta) {
+    public void onGuiRender(GuiGraphicsExtractor guiGraphics, float tickDelta) {
         if (Config.osdEnabled) {
             this.osd.renderVelocity(guiGraphics, tickDelta);
             this.osd.renderSticks(guiGraphics, tickDelta);

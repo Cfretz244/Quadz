@@ -4,8 +4,12 @@
   "version": "$version",
   "environment": "*",
   "entrypoints": {
-    "main": [ "dev.lazurite.quadz.Quadz" ],
-    "client": [ "dev.lazurite.quadz.client.QuadzClient" ]
+    "main": [
+      "dev.lazurite.quadz.Quadz"
+    ],
+    "client": [
+      "dev.lazurite.quadz.client.QuadzClient"
+    ]
   },
   "mixins": [
     {
@@ -21,9 +25,9 @@
   "depends": {
     "minecraft": ">=1.19.3",
     "fabricloader": ">=0.14",
-    "fabric": "*",
     "geckolib": ">=4",
-    "rayon": ">=1.6.2"
+    "rayon": ">=1.6.2",
+    "fabric-api": "*"
   },
   "breaks": {
     "immersive_portals": "*",
@@ -31,7 +35,9 @@
   },
   "name": "Quadz",
   "description": "An FPV drone simulator for Fabric.",
-  "authors": [ "The Lazurite Team" ],
+  "authors": [
+    "The Lazurite Team"
+  ],
   "contact": {
     "homepage": "https://lazurite.dev",
     "sources": "https://github.com/LazuriteMC/Quadz",
@@ -46,10 +52,10 @@
       }
     },
     "loom:injected_interfaces": {
-      "net/minecraft/class_5498": [
+      "net/minecraft/client/CameraType": [
         "dev/lazurite/quadz/client/extension/CameraTypeExtension"
       ],
-      "net/minecraft/class_1657": [
+      "net/minecraft/world/entity/player/Player": [
         "dev/lazurite/quadz/common/extension/PlayerExtension"
       ]
     }

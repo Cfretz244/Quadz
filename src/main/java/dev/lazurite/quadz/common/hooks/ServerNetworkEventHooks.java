@@ -17,7 +17,7 @@ public class ServerNetworkEventHooks {
         var axisCount = buf.readInt();
 
         for (int i = 0; i < axisCount; i++) {
-            var axis = buf.readResourceLocation();
+            var axis = buf.readIdentifier();
             var value = buf.readFloat();
             player.quadz$setJoystickValue(axis, value);
         }
@@ -28,7 +28,7 @@ public class ServerNetworkEventHooks {
         var buf = context.byteBuf();
         var spectateDirection = buf.readInt();
 
-        Optional.ofNullable(player.getServer()).ifPresent(server -> {
+        Optional.ofNullable(player.level().getServer()).ifPresent(server -> {
             server.execute(() -> {
                 if (player.getCamera() instanceof Quadcopter quadcopter) {
                     var allQuadcopters = new ArrayList<>(Search.forAllViewed(server));
@@ -59,7 +59,7 @@ public class ServerNetworkEventHooks {
 
     public static void onPlayerViewRequestReceived(PacketRegistry.ServerboundContext context) {
         var player = context.player();
-        Optional.ofNullable(player.getServer()).ifPresent(server -> server.execute(() -> player.setCamera(player)));
+        Optional.ofNullable(player.level().getServer()).ifPresent(server -> server.execute(() -> player.setCamera(player)));
     }
 
 }

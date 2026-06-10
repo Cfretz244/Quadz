@@ -3,18 +3,18 @@ package dev.lazurite.quadz.client.render.screen;
 import dev.lazurite.quadz.Quadz;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.Font;
-import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.client.gui.components.toasts.Toast;
 import net.minecraft.client.gui.components.toasts.ToastManager;
 import net.minecraft.client.renderer.RenderPipelines;
 import net.minecraft.network.chat.Component;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 import net.minecraft.world.item.ItemStack;
 
 public class ControllerConnectedToast implements Toast {
 
     // 1.21: toasts no longer expose a TEXTURE constant; blit the vanilla toast background sprite.
-    private static final ResourceLocation BACKGROUND_SPRITE = ResourceLocation.withDefaultNamespace("toast/advancement");
+    private static final Identifier BACKGROUND_SPRITE = Identifier.withDefaultNamespace("toast/advancement");
 
     private final Component message;
     private final String controllerName;
@@ -43,12 +43,13 @@ public class ControllerConnectedToast implements Toast {
         this.wantedVisibility = startTime >= 5000L ? Visibility.HIDE : Visibility.SHOW;
     }
 
+    // 26.1: toasts extract render state instead of rendering.
     @Override
-    public void render(GuiGraphics guiGraphics, Font font, long startTime) {
+    public void extractRenderState(GuiGraphicsExtractor guiGraphics, Font font, long startTime) {
         guiGraphics.blitSprite(RenderPipelines.GUI_TEXTURED, BACKGROUND_SPRITE, 0, 0, width(), height());
-        guiGraphics.drawString(font, message, 30, 7, -1, false);
-        guiGraphics.drawString(font, Component.literal(controllerName), 30, 18, -1, false);
-        guiGraphics.renderFakeItem(new ItemStack(Quadz.REMOTE_ITEM), 8, 8);
+        guiGraphics.text(font, message, 30, 7, -1, false);
+        guiGraphics.text(font, Component.literal(controllerName), 30, 18, -1, false);
+        guiGraphics.fakeItem(new ItemStack(Quadz.REMOTE_ITEM), 8, 8);
     }
 
     public static void add(Component message, String name) {

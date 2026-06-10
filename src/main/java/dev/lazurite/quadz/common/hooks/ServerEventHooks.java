@@ -5,7 +5,7 @@ import dev.lazurite.form.impl.common.template.model.Template;
 import dev.lazurite.quadz.Quadz;
 import dev.lazurite.quadz.common.entity.Quadcopter;
 import dev.lazurite.rayon.impl.bullet.collision.body.shape.MinecraftShape;
-import net.fabricmc.fabric.api.itemgroup.v1.FabricItemGroupEntries;
+import net.fabricmc.fabric.api.creativetab.v1.FabricCreativeModeTabOutput;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.item.ItemStack;
 
@@ -28,7 +28,7 @@ public class ServerEventHooks {
         // by the menu itself when (re)opened, so a newly loaded template still becomes searchable.
     }
 
-    public static void onRebuildCreativeTab(FabricItemGroupEntries content) {
+    public static void onRebuildCreativeTab(FabricCreativeModeTabOutput content) {
         content.accept(new ItemStack(Quadz.GOGGLES_ITEM));
         content.accept(new ItemStack(Quadz.REMOTE_ITEM));
 

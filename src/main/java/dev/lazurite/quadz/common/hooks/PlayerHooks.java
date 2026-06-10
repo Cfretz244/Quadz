@@ -4,7 +4,7 @@ import dev.lazurite.quadz.Quadz;
 import dev.lazurite.quadz.common.entity.Quadcopter;
 import dev.lazurite.toolbox.api.network.ClientNetworking;
 import dev.lazurite.toolbox.api.network.ServerNetworking;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.entity.player.Player;
 
@@ -14,17 +14,17 @@ import java.util.concurrent.ConcurrentHashMap;
 
 public class PlayerHooks {
 
-    private static final Map<ResourceLocation, Float> joystickValues = new ConcurrentHashMap<>();
+    private static final Map<Identifier, Float> joystickValues = new ConcurrentHashMap<>();
 
-    public static float onGetJoystickValues(ResourceLocation axis) {
+    public static float onGetJoystickValues(Identifier axis) {
         return joystickValues.get(axis) == null ? 0.0f : joystickValues.get(axis);
     }
 
-    public static Map<ResourceLocation, Float> onGetAllAxes() {
+    public static Map<Identifier, Float> onGetAllAxes() {
         return new HashMap<>(joystickValues);
     }
 
-    public static void onSetJoystickValue(ResourceLocation axis, float value) {
+    public static void onSetJoystickValue(Identifier axis, float value) {
         joystickValues.put(axis, value);
     }
 
@@ -37,7 +37,7 @@ public class PlayerHooks {
                 buf.writeInt(joysticks.size());
 
                 joysticks.forEach((axis, value) -> {
-                    buf.writeResourceLocation(axis);
+                    buf.writeIdentifier(axis);
                     buf.writeFloat(value);
                 });
             });
@@ -49,7 +49,7 @@ public class PlayerHooks {
                         buf.writeInt(joysticks.size());
 
                         joysticks.forEach((axis, value) -> {
-                            buf.writeResourceLocation(axis);
+                            buf.writeIdentifier(axis);
                             buf.writeFloat(value);
                         });
                     });

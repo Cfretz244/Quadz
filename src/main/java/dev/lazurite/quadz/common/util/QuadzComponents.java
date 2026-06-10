@@ -6,7 +6,7 @@ import net.minecraft.core.Registry;
 import net.minecraft.core.component.DataComponentType;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.network.codec.ByteBufCodecs;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 
 /**
  * 1.20.5+ data components replacing the old {@code stack.bindable} NBT sub-tag.
@@ -16,7 +16,7 @@ import net.minecraft.resources.ResourceLocation;
 public final class QuadzComponents {
     public static final DataComponentType<Integer> BIND_ID = Registry.register(
             BuiltInRegistries.DATA_COMPONENT_TYPE,
-            ResourceLocation.fromNamespaceAndPath(Quadz.MODID, "bind_id"),
+            Identifier.fromNamespaceAndPath(Quadz.MODID, "bind_id"),
             DataComponentType.<Integer>builder()
                     .persistent(Codec.INT)
                     .networkSynchronized(ByteBufCodecs.VAR_INT)

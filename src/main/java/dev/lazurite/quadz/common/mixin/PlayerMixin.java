@@ -2,7 +2,7 @@ package dev.lazurite.quadz.common.mixin;
 
 import dev.lazurite.quadz.common.extension.PlayerExtension;
 import dev.lazurite.quadz.common.hooks.PlayerHooks;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 import net.minecraft.world.entity.player.Player;
 import org.spongepowered.asm.mixin.Mixin;
 
@@ -12,17 +12,17 @@ import java.util.Map;
 public class PlayerMixin implements PlayerExtension {
 
     @Override
-    public float quadz$getJoystickValue(ResourceLocation axis) {
+    public float quadz$getJoystickValue(Identifier axis) {
         return PlayerHooks.onGetJoystickValues(axis);
     }
 
     @Override
-    public void quadz$setJoystickValue(ResourceLocation axis, float value) {
+    public void quadz$setJoystickValue(Identifier axis, float value) {
         PlayerHooks.onSetJoystickValue(axis, value);
     }
 
     @Override
-    public Map<ResourceLocation, Float> quadz$getAllAxes() {
+    public Map<Identifier, Float> quadz$getAllAxes() {
         return PlayerHooks.onGetAllAxes();
     }
 

@@ -4,7 +4,8 @@ import dev.lazurite.quadz.client.QuadzClient;
 import dev.lazurite.quadz.client.render.RenderHooks;
 import net.minecraft.client.DeltaTracker;
 import net.minecraft.client.renderer.GameRenderer;
-import org.joml.Matrix4f;
+import net.minecraft.client.renderer.state.level.CameraRenderState;
+import org.joml.Matrix4fc;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
@@ -19,9 +20,9 @@ public class GameRendererMixin {
         RenderHooks.onRenderLevel(deltaTracker.getGameTimeDeltaPartialTick(false));
     }
 
-    // 1.21.5+: renderItemInHand(float, boolean, Matrix4f).
+    // 26.1: renderItemInHand(CameraRenderState, float, Matrix4fc).
     @Inject(method = "renderItemInHand", at = @At("HEAD"), cancellable = true)
-    private void renderItemInHand$HEAD(float f, boolean bl, Matrix4f matrix4f, CallbackInfo ci) {
+    private void renderItemInHand$HEAD(CameraRenderState cameraRenderState, float f, Matrix4fc matrix4f, CallbackInfo ci) {
         if (QuadzClient.getQuadcopterFromCamera().isPresent()) {
             ci.cancel();
         }

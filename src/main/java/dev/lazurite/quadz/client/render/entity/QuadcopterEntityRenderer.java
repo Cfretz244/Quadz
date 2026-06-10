@@ -6,11 +6,11 @@ import dev.lazurite.form.impl.client.render.TemplatedEntityRenderer;
 import dev.lazurite.form.impl.client.render.TemplatedEntityRenderState;
 import dev.lazurite.quadz.common.entity.Quadcopter;
 import dev.lazurite.rayon.impl.bullet.math.Convert;
-import net.minecraft.client.renderer.MultiBufferSource;
+import net.minecraft.client.renderer.SubmitNodeCollector;
+import net.minecraft.client.renderer.state.level.CameraRenderState;
 import net.minecraft.client.renderer.entity.EntityRendererProvider;
 import org.joml.Quaternionf;
-import software.bernie.geckolib.constant.DataTickets;
-import software.bernie.geckolib.constant.dataticket.DataTicket;
+import com.geckolib.constant.dataticket.DataTicket;
 
 public class QuadcopterEntityRenderer extends TemplatedEntityRenderer<Quadcopter> {
 
@@ -23,11 +23,11 @@ public class QuadcopterEntityRenderer extends TemplatedEntityRenderer<Quadcopter
         super(ctx);
     }
 
+    // GeckoLib 5.5: the hook carries the partial tick directly.
     @Override
-    public void addRenderData(Quadcopter quadcopter, Void relatedObject, TemplatedEntityRenderState renderState) {
-        super.addRenderData(quadcopter, relatedObject, renderState);
+    public void addRenderData(Quadcopter quadcopter, Void relatedObject, TemplatedEntityRenderState renderState, float partialTick) {
+        super.addRenderData(quadcopter, relatedObject, renderState, partialTick);
 
-        final float partialTick = renderState.getOrDefaultGeckolibData(DataTickets.PARTIAL_TICK, 1.0f);
         renderState.addGeckolibData(PHYSICS_ROTATION, Convert.toMinecraft(quadcopter.getPhysicsRotation(new Quaternion(), partialTick)));
         renderState.addGeckolibData(HALF_HEIGHT, (float) (quadcopter.getBoundingBox().getYsize() / 2));
 
@@ -36,12 +36,13 @@ public class QuadcopterEntityRenderer extends TemplatedEntityRenderer<Quadcopter
         renderState.yRot = 0;
     }
 
+    // 26.1: entity rendering is submit-based.
     @Override
-    public void render(TemplatedEntityRenderState renderState, PoseStack stack, MultiBufferSource bufferIn, int packedLightIn) {
+    public void submit(TemplatedEntityRenderState renderState, PoseStack stack, SubmitNodeCollector collector, CameraRenderState cameraRenderState) {
         stack.pushPose();
         stack.mulPose(renderState.getOrDefaultGeckolibData(PHYSICS_ROTATION, new Quaternionf()));
         stack.translate(0, -renderState.getOrDefaultGeckolibData(HALF_HEIGHT, 0.0f), 0);
-        super.render(renderState, stack, bufferIn, packedLightIn);
+        super.submit(renderState, stack, collector, cameraRenderState);
         stack.popPose();
     }
 

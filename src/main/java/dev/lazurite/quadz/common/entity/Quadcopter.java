@@ -24,7 +24,7 @@ import net.minecraft.network.chat.Component;
 import net.minecraft.network.syncher.EntityDataAccessor;
 import net.minecraft.network.syncher.EntityDataSerializers;
 import net.minecraft.network.syncher.SynchedEntityData;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.InteractionHand;
@@ -46,13 +46,13 @@ import net.minecraft.world.phys.Vec3;
 import org.jetbrains.annotations.NotNull;
 import org.joml.Matrix4f;
 import org.joml.Quaternionf;
-import software.bernie.geckolib.animatable.GeoEntity;
-import software.bernie.geckolib.animatable.instance.AnimatableInstanceCache;
-import software.bernie.geckolib.animatable.manager.AnimatableManager;
-import software.bernie.geckolib.animatable.processing.AnimationController;
-import software.bernie.geckolib.animation.RawAnimation;
-import software.bernie.geckolib.animation.PlayState;
-import software.bernie.geckolib.util.GeckoLibUtil;
+import com.geckolib.animatable.GeoEntity;
+import com.geckolib.animatable.instance.AnimatableInstanceCache;
+import com.geckolib.animatable.manager.AnimatableManager;
+import com.geckolib.animation.AnimationController;
+import com.geckolib.animation.RawAnimation;
+import com.geckolib.animation.object.PlayState;
+import com.geckolib.util.GeckoLibUtil;
 
 import java.util.Optional;
 
@@ -86,7 +86,7 @@ public class Quadcopter extends LivingEntity implements EntityPhysicsElement, Te
             this.refreshDimensions();
         }
 
-        if (!this.level().isClientSide) {
+        if (!this.level().isClientSide()) {
             // Server-side only prioritization
             Optional.ofNullable(getRigidBody().getPriorityPlayer()).ifPresent(player -> {
                 if (!((ServerPlayer) player).getCamera().equals(this)) {
@@ -117,14 +117,14 @@ public class Quadcopter extends LivingEntity implements EntityPhysicsElement, Te
                 this.getRigidBody().prioritize(player);
             }
 
-            var pitch = player.quadz$getJoystickValue(ResourceLocation.fromNamespaceAndPath(Quadz.MODID, "pitch"));
-            var yaw = -1 * player.quadz$getJoystickValue(ResourceLocation.fromNamespaceAndPath(Quadz.MODID, "yaw"));
-            var roll = player.quadz$getJoystickValue(ResourceLocation.fromNamespaceAndPath(Quadz.MODID, "roll"));
-            var throttle = player.quadz$getJoystickValue(ResourceLocation.fromNamespaceAndPath(Quadz.MODID, "throttle")) + 1.0f;
+            var pitch = player.quadz$getJoystickValue(Identifier.fromNamespaceAndPath(Quadz.MODID, "pitch"));
+            var yaw = -1 * player.quadz$getJoystickValue(Identifier.fromNamespaceAndPath(Quadz.MODID, "yaw"));
+            var roll = player.quadz$getJoystickValue(Identifier.fromNamespaceAndPath(Quadz.MODID, "roll"));
+            var throttle = player.quadz$getJoystickValue(Identifier.fromNamespaceAndPath(Quadz.MODID, "throttle")) + 1.0f;
 
-            var rate = player.quadz$getJoystickValue(ResourceLocation.fromNamespaceAndPath(Quadz.MODID, "rate"));
-            var superRate = player.quadz$getJoystickValue(ResourceLocation.fromNamespaceAndPath(Quadz.MODID, "super_rate"));
-            var expo = player.quadz$getJoystickValue(ResourceLocation.fromNamespaceAndPath(Quadz.MODID, "expo"));
+            var rate = player.quadz$getJoystickValue(Identifier.fromNamespaceAndPath(Quadz.MODID, "rate"));
+            var superRate = player.quadz$getJoystickValue(Identifier.fromNamespaceAndPath(Quadz.MODID, "super_rate"));
+            var expo = player.quadz$getJoystickValue(Identifier.fromNamespaceAndPath(Quadz.MODID, "expo"));
 
             this.rotate(
                     (float) BetaflightHelper.calculateRates(pitch, rate, expo, superRate, 0.05f),
@@ -162,7 +162,7 @@ public class Quadcopter extends LivingEntity implements EntityPhysicsElement, Te
         }, () -> {
             this.setArmed(false);
 
-            if (!this.level().isClientSide) {
+            if (!this.level().isClientSide()) {
                 this.getRigidBody().prioritize(null);
             }
         });
@@ -192,13 +192,14 @@ public class Quadcopter extends LivingEntity implements EntityPhysicsElement, Te
     }
 
     @Override
-    public InteractionResult interact(Player player, InteractionHand hand) {
+    // 26.1: interact gained the hit location.
+    public InteractionResult interact(Player player, InteractionHand hand, Vec3 location) {
         if (!level().isClientSide()) {
             final var stack = player.getInventory().getSelectedItem();
 
             if (stack.getItem() instanceof RemoteItem) {
                 Bindable.get(stack).ifPresent(bindable -> Bindable.bind(this, bindable));
-                player.displayClientMessage(Component.translatable("quadz.message.bound"), true);
+                player/*26.1*/.sendOverlayMessage(Component.translatable("quadz.message.bound"));
             }
         }
 
@@ -315,7 +316,7 @@ public class Quadcopter extends LivingEntity implements EntityPhysicsElement, Te
 
     @Override
     public void registerControllers(AnimatableManager.ControllerRegistrar controllerRegistrar) {
-        controllerRegistrar.add(new AnimationController<Quadcopter>(0, state -> {
+        controllerRegistrar.add(new AnimationController<Quadcopter>("base", 0, state -> {
             if (this.isArmed()) {
                 return state.setAndContinue(RawAnimation.begin().thenLoop("armed"));
             }

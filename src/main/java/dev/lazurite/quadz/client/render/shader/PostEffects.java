@@ -10,7 +10,7 @@ import dev.lazurite.quadz.client.mixin.PostPassAccessor;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.LevelTargetBundle;
 import net.minecraft.client.renderer.PostChain;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 import org.lwjgl.system.MemoryStack;
 
 /**
@@ -25,8 +25,8 @@ import org.lwjgl.system.MemoryStack;
  */
 public final class PostEffects {
 
-    private static final ResourceLocation STATIC_ID = ResourceLocation.fromNamespaceAndPath(Quadz.MODID, "static");
-    private static final ResourceLocation FISHEYE_ID = ResourceLocation.fromNamespaceAndPath(Quadz.MODID, "fisheye");
+    private static final Identifier STATIC_ID = Identifier.fromNamespaceAndPath(Quadz.MODID, "static");
+    private static final Identifier FISHEYE_ID = Identifier.fromNamespaceAndPath(Quadz.MODID, "fisheye");
     private static final String STATIC_BLOCK = "StaticConfig";
     private static final String FISHEYE_BLOCK = "FisheyeConfig";
     private static final int BUFFER_USAGE = GpuBuffer.USAGE_UNIFORM | GpuBuffer.USAGE_COPY_DST;
@@ -91,7 +91,7 @@ public final class PostEffects {
             final var baked = uniforms.get(blockName);
 
             if (baked != null) {
-                final var buffer = RenderSystem.getDevice().createBuffer(() -> label, BUFFER_USAGE, baked.size());
+                final var buffer = RenderSystem.getDevice().createBuffer(() -> label, BUFFER_USAGE, (int) baked.size());
                 uniforms.put(blockName, buffer);
                 baked.close();
                 return buffer;
@@ -104,7 +104,7 @@ public final class PostEffects {
 
     private static void writeFloats(GpuBuffer buffer, float... values) {
         try (final var stack = MemoryStack.stackPush()) {
-            final var builder = Std140Builder.onStack(stack, buffer.size());
+            final var builder = Std140Builder.onStack(stack, (int) buffer.size());
 
             for (final var value : values) {
                 builder.putFloat(value);

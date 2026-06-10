@@ -21,7 +21,7 @@ import net.fabricmc.fabric.api.client.rendering.v1.EntityRendererRegistry;
 import net.fabricmc.fabric.api.client.rendering.v1.hud.HudElementRegistry;
 import net.fabricmc.fabric.api.resource.ResourceManagerHelper;
 import net.minecraft.client.Minecraft;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 import net.minecraft.server.packs.PackType;
 
 import java.util.Optional;
@@ -63,7 +63,7 @@ public class QuadzClient implements ClientModInitializer {
 
         // FPV on-screen display — 1.21.6 deferred GUI pipeline: registered as a HUD element
         // (replaces the old Gui.render TAIL mixin); post effects run from the GameRenderer hook.
-        HudElementRegistry.addLast(ResourceLocation.fromNamespaceAndPath(Quadz.MODID, "osd"), (guiGraphics, deltaTracker) ->
+        HudElementRegistry.addLast(Identifier.fromNamespaceAndPath(Quadz.MODID, "osd"), (guiGraphics, deltaTracker) ->
                 getQuadcopterFromCamera().ifPresent(quadcopter ->
                         quadcopter.getView().onGuiRender(guiGraphics, deltaTracker.getGameTimeDeltaPartialTick(false))));
 

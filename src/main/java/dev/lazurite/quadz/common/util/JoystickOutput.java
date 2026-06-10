@@ -2,7 +2,7 @@ package dev.lazurite.quadz.common.util;
 
 import com.google.common.collect.Maps;
 import dev.lazurite.quadz.client.Config;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 import net.minecraft.world.entity.player.Player;
 import org.jetbrains.annotations.Nullable;
 
@@ -27,7 +27,7 @@ public interface JoystickOutput {
         return null;
     }
 
-    static float getAxisValue(@Nullable Player player, int axis, ResourceLocation resourceLocation, boolean inverted, boolean halved) {
+    static float getAxisValue(@Nullable Player player, int axis, Identifier resourceLocation, boolean inverted, boolean halved) {
         var deadzone = Config.deadzone;
         var value = 0.0f;
 

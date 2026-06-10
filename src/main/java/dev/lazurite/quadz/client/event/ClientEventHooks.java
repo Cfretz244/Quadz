@@ -10,24 +10,24 @@ import net.minecraft.client.Minecraft;
 import net.minecraft.client.multiplayer.ClientLevel;
 import net.minecraft.client.player.LocalPlayer;
 import net.minecraft.network.chat.Component;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 
 public class ClientEventHooks {
 
     public static void onPostLogin(Minecraft minecraft, ClientLevel level, LocalPlayer player) {
         if (player != null) {
-            player.quadz$setJoystickValue(ResourceLocation.fromNamespaceAndPath(Quadz.MODID, "rate"), Config.rate);
-            player.quadz$setJoystickValue(ResourceLocation.fromNamespaceAndPath(Quadz.MODID, "super_rate"), Config.superRate);
-            player.quadz$setJoystickValue(ResourceLocation.fromNamespaceAndPath(Quadz.MODID, "expo"), Config.expo);
+            player.quadz$setJoystickValue(Identifier.fromNamespaceAndPath(Quadz.MODID, "rate"), Config.rate);
+            player.quadz$setJoystickValue(Identifier.fromNamespaceAndPath(Quadz.MODID, "super_rate"), Config.superRate);
+            player.quadz$setJoystickValue(Identifier.fromNamespaceAndPath(Quadz.MODID, "expo"), Config.expo);
         }
     }
 
     public static void onClientTick(Minecraft minecraft) {
         if (!minecraft.isPaused() && minecraft.player != null && JoystickOutput.controllerExists()) {
-            JoystickOutput.getAxisValue(minecraft.player, Config.pitch, ResourceLocation.fromNamespaceAndPath(Quadz.MODID, "pitch"), Config.pitchInverted, false);
-            JoystickOutput.getAxisValue(minecraft.player, Config.yaw, ResourceLocation.fromNamespaceAndPath(Quadz.MODID, "yaw"), Config.yawInverted, false);
-            JoystickOutput.getAxisValue(minecraft.player, Config.roll, ResourceLocation.fromNamespaceAndPath(Quadz.MODID, "roll"), Config.rollInverted, false);
-            JoystickOutput.getAxisValue(minecraft.player, Config.throttle, ResourceLocation.fromNamespaceAndPath(Quadz.MODID, "throttle"), Config.throttleInverted, Config.throttleInCenter);
+            JoystickOutput.getAxisValue(minecraft.player, Config.pitch, Identifier.fromNamespaceAndPath(Quadz.MODID, "pitch"), Config.pitchInverted, false);
+            JoystickOutput.getAxisValue(minecraft.player, Config.yaw, Identifier.fromNamespaceAndPath(Quadz.MODID, "yaw"), Config.yawInverted, false);
+            JoystickOutput.getAxisValue(minecraft.player, Config.roll, Identifier.fromNamespaceAndPath(Quadz.MODID, "roll"), Config.rollInverted, false);
+            JoystickOutput.getAxisValue(minecraft.player, Config.throttle, Identifier.fromNamespaceAndPath(Quadz.MODID, "throttle"), Config.throttleInverted, Config.throttleInCenter);
         }
     }
 

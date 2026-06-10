@@ -1,6 +1,6 @@
 package dev.lazurite.quadz.client.render.screen;
 
-import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.gui.GuiGraphicsExtractor;
 import dev.lazurite.quadz.Quadz;
 import dev.lazurite.quadz.client.Config;
 import dev.lazurite.quadz.client.render.screen.osd.OnScreenDisplay;
@@ -9,7 +9,7 @@ import dev.lazurite.quadz.common.util.JoystickOutput;
 import net.minecraft.client.gui.components.Button;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.network.chat.Component;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 
 import java.nio.FloatBuffer;
 import java.util.List;
@@ -19,10 +19,10 @@ public class ControllerSetupScreen extends Screen {
 
     private final Screen parent;
 
-    private final ResourceLocation pitchLocation = ResourceLocation.fromNamespaceAndPath(Quadz.MODID, "pitch");
-    private final ResourceLocation yawLocation = ResourceLocation.fromNamespaceAndPath(Quadz.MODID, "yaw");
-    private final ResourceLocation rollLocation = ResourceLocation.fromNamespaceAndPath(Quadz.MODID, "roll");
-    private final ResourceLocation throttleLocation = ResourceLocation.fromNamespaceAndPath(Quadz.MODID, "throttle");
+    private final Identifier pitchLocation = Identifier.fromNamespaceAndPath(Quadz.MODID, "pitch");
+    private final Identifier yawLocation = Identifier.fromNamespaceAndPath(Quadz.MODID, "yaw");
+    private final Identifier rollLocation = Identifier.fromNamespaceAndPath(Quadz.MODID, "roll");
+    private final Identifier throttleLocation = Identifier.fromNamespaceAndPath(Quadz.MODID, "throttle");
 
     private Button saveButton;
     private Button cancelButton;
@@ -173,9 +173,9 @@ public class ControllerSetupScreen extends Screen {
     }
 
     @Override
-    public void render(GuiGraphics guiGraphics, int i, int j, float f) {
-        // 1.21: Screen.renderDirtBackground was removed; super.render() draws the background itself.
-        super.render(guiGraphics, i, j, f);
+    public void extractRenderState(GuiGraphicsExtractor guiGraphics, int i, int j, float f) {
+        // 1.21: Screen.renderDirtBackground was removed; super.extractRenderState() draws the background itself.
+        super.extractRenderState(guiGraphics, i, j, f);
 
         var pitch = JoystickOutput.getAxisValue(null, Config.pitch, this.pitchLocation, Config.pitchInverted, false);
         var yaw = JoystickOutput.getAxisValue(null, Config.yaw, this.yawLocation, Config.yawInverted, false);
@@ -185,7 +185,7 @@ public class ControllerSetupScreen extends Screen {
 
         // An axis has been selected. Time to listen...
         if (this.axisConsumer != null) {
-            guiGraphics.drawCenteredString(this.font, Component.translatable("quadz.config.controller_setup.prompt"), this.width / 2, 85, 0x00FF00);
+            guiGraphics.centeredText(this.font, Component.translatable("quadz.config.controller_setup.prompt"), this.width / 2, 85, 0x00FF00);
         }
     }
 

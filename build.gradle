@@ -1,5 +1,5 @@
 plugins {
-	id 'fabric-loom' version "$loom_version"
+	id 'net.fabricmc.fabric-loom' version "$loom_version"
 	id 'maven-publish'
 	id 'java-library'
 }
@@ -13,13 +13,9 @@ loom {
 
 repositories {
 	maven {
-		name 'Lazurite'
-		url 'https://lazurite.dev/releases'
-	}
-
-	maven {
-		name 'Gecko'
-		url 'https://dl.cloudsmith.io/public/geckolib3/geckolib/maven/'
+		name 'Modrinth'
+		url 'https://api.modrinth.com/maven'
+		content { includeGroup 'maven.modrinth' }
 	}
 
 	maven {
@@ -27,47 +23,30 @@ repositories {
 		url "https://maven.shedaniel.me/"
 	}
 
-	maven {
-		name 'Ladysnake Mods'
-		url 'https://maven.ladysnake.org/releases'
-		content {
-			includeGroup 'org.ladysnake'
-			includeGroupByRegex 'io\\.github\\.ladysnake.*'
-		}
-	}
-
-	maven {
-		name 'Parchment'
-		url 'https://maven.parchmentmc.org'
-	}
-
 	mavenLocal()
 }
 
 dependencies {
 	minecraft "com.mojang:minecraft:$minecraft_version"
-	mappings loom.layered() {
-		officialMojangMappings()
-		parchment("org.parchmentmc.data:parchment-$minecraft_version:$parchment_version@zip")
-	}
+	// 26.1: unobfuscated — no mappings
 
 	// Fabric
-	modImplementation "net.fabricmc:fabric-loader:$fabric_loader_version"
-	modImplementation "net.fabricmc.fabric-api:fabric-api:$fabric_api_version"
+	implementation "net.fabricmc:fabric-loader:$fabric_loader_version"
+	implementation "net.fabricmc.fabric-api:fabric-api:$fabric_api_version"
 
 	// Lazurite
-	modImplementation "dev.lazurite:rayon-fabric:$rayon_version"
-	modImplementation include("dev.lazurite:form:$form_version")
-	modApi include("dev.lazurite:corduroy:$corduroy_version")
+	implementation "dev.lazurite:rayon-fabric:$rayon_version"
+	implementation include("dev.lazurite:form:$form_version")
+	api include("dev.lazurite:corduroy:$corduroy_version")
 //	modApi include("dev.lazurite:lattice:$lattice_version")
 
 	// Other
-	modImplementation include("me.shedaniel.cloth:cloth-config-fabric:$cloth_version") { exclude(group: "net.fabricmc.fabric-api") }
+	implementation include("me.shedaniel.cloth:cloth-config-fabric:$cloth_version") { exclude(group: "net.fabricmc.fabric-api") }
 }
 
 java {
 	toolchain {
-		languageVersion = JavaLanguageVersion.of(21)
+		languageVersion = JavaLanguageVersion.of(25)
 	}
 
 	withSourcesJar()

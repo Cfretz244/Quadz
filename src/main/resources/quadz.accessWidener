@@ -1,4 +1,4 @@
-accessWidener	v1	named
+accessWidener	v1	official
 
 extendable method net/minecraft/world/entity/Entity getPosition (F)Lnet/minecraft/world/phys/Vec3;
 accessible field net/minecraft/client/resources/SplashManager splashes Ljava/util/List;

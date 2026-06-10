@@ -12,7 +12,7 @@ import dev.lazurite.toolbox.api.math.QuaternionHelper;
 import net.minecraft.core.registries.Registries;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceKey;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.InteractionResult;
 import net.minecraft.world.entity.EntitySpawnReason;
@@ -23,14 +23,14 @@ import net.minecraft.world.level.ClipContext;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.phys.HitResult;
 import org.jetbrains.annotations.NotNull;
-import software.bernie.geckolib.animatable.GeoItem;
-import software.bernie.geckolib.renderer.GeoItemRenderer;
-import software.bernie.geckolib.animatable.client.GeoRenderProvider;
-import software.bernie.geckolib.animatable.instance.AnimatableInstanceCache;
-import software.bernie.geckolib.animatable.manager.AnimatableManager;
-import software.bernie.geckolib.animatable.processing.AnimationController;
-import software.bernie.geckolib.animation.PlayState;
-import software.bernie.geckolib.util.GeckoLibUtil;
+import com.geckolib.animatable.GeoItem;
+import com.geckolib.renderer.GeoItemRenderer;
+import com.geckolib.animatable.client.GeoRenderProvider;
+import com.geckolib.animatable.instance.AnimatableInstanceCache;
+import com.geckolib.animatable.manager.AnimatableManager;
+import com.geckolib.animation.AnimationController;
+import com.geckolib.animation.object.PlayState;
+import com.geckolib.util.GeckoLibUtil;
 
 import java.util.Random;
 import java.util.function.Consumer;
@@ -46,7 +46,7 @@ public class QuadcopterItem extends Item implements GeoItem, Templated.Item {
     public QuadcopterItem() {
         // 1.21.4: items must carry their registry id in Properties (setId) at construction.
         super(new Properties().stacksTo(1)
-                .setId(ResourceKey.create(Registries.ITEM, ResourceLocation.fromNamespaceAndPath(Quadz.MODID, "quadcopter"))));
+                .setId(ResourceKey.create(Registries.ITEM, Identifier.fromNamespaceAndPath(Quadz.MODID, "quadcopter"))));
     }
 
     // 1.21.2: InteractionResultHolder is gone; use() returns InteractionResult directly.
@@ -96,7 +96,7 @@ public class QuadcopterItem extends Item implements GeoItem, Templated.Item {
 
     @Override
     public void registerControllers(AnimatableManager.ControllerRegistrar controllers) {
-        controllers.add(new AnimationController<QuadcopterItem>(20, state -> PlayState.CONTINUE));
+        controllers.add(new AnimationController<QuadcopterItem>("base", 20, state -> PlayState.CONTINUE));
     }
 
     @Override

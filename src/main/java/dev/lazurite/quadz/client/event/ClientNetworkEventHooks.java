@@ -13,7 +13,7 @@ public class ClientNetworkEventHooks {
 
         if (player != null) {
             for (int i = 0; i < axisCount; i++) {
-                var axis = buf.readResourceLocation();
+                var axis = buf.readIdentifier();
                 var value = buf.readFloat();
                 player.quadz$setJoystickValue(axis, value);
             }

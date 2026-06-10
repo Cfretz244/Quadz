@@ -7,9 +7,9 @@ import dev.lazurite.quadz.common.entity.Quadcopter;
 import dev.lazurite.quadz.common.util.Search;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.Font;
-import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.network.chat.Component;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 
 public class OnScreenDisplay {
 
@@ -21,28 +21,28 @@ public class OnScreenDisplay {
         this.font = Minecraft.getInstance().font;
     }
 
-    public void renderVelocity(GuiGraphics guiGraphics, float tickDelta) {
+    public void renderVelocity(GuiGraphicsExtractor guiGraphics, float tickDelta) {
         var client = Minecraft.getInstance();
         var height = client.getWindow().getGuiScaledHeight() - 25;
         var unit = Config.velocityUnit;
         final var vel = Math.round(quadcopter.getRigidBody().getLinearVelocity(new Vector3f()).length() * unit.getFactor() * 10) / 10f;
         final var velocity = Component.literal(vel + " " + unit.getAbbreviation());
-        guiGraphics.drawString(font, velocity, 25, height, 0xFFFFFFFF, true);
+        guiGraphics.text(font, velocity, 25, height, 0xFFFFFFFF, true);
     }
 
-    public void renderSticks(GuiGraphics guiGraphics, float tickDelta) {
+    public void renderSticks(GuiGraphicsExtractor guiGraphics, float tickDelta) {
         Search.forPlayer(quadcopter).ifPresent(player -> {
-            var pitch = player.quadz$getJoystickValue(ResourceLocation.fromNamespaceAndPath(Quadz.MODID, "pitch"));
-            var yaw = player.quadz$getJoystickValue(ResourceLocation.fromNamespaceAndPath(Quadz.MODID, "yaw"));
-            var roll = player.quadz$getJoystickValue(ResourceLocation.fromNamespaceAndPath(Quadz.MODID, "roll"));
-            var throttle = (player.quadz$getJoystickValue(ResourceLocation.fromNamespaceAndPath(Quadz.MODID, "throttle")) + 1.0f);
+            var pitch = player.quadz$getJoystickValue(Identifier.fromNamespaceAndPath(Quadz.MODID, "pitch"));
+            var yaw = player.quadz$getJoystickValue(Identifier.fromNamespaceAndPath(Quadz.MODID, "yaw"));
+            var roll = player.quadz$getJoystickValue(Identifier.fromNamespaceAndPath(Quadz.MODID, "roll"));
+            var throttle = (player.quadz$getJoystickValue(Identifier.fromNamespaceAndPath(Quadz.MODID, "throttle")) + 1.0f);
             var width = Minecraft.getInstance().getWindow().getGuiScaledWidth();
             var height = Minecraft.getInstance().getWindow().getGuiScaledHeight();
             renderSticks(guiGraphics, tickDelta, width / 2, height - 75, 25, 5, pitch, yaw, roll, throttle);
         });
     }
 
-    public static void renderSticks(GuiGraphics guiGraphics, float tickDelta, int x, int y, int scale, int spacing, float pitch, float yaw, float roll, float throttle) {
+    public static void renderSticks(GuiGraphicsExtractor guiGraphics, float tickDelta, int x, int y, int scale, int spacing, float pitch, float yaw, float roll, float throttle) {
         var leftX = x - scale - spacing;
         var rightX = x + scale + spacing;
         var topY = y + scale;
