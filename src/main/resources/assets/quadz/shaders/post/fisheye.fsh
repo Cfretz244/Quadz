@@ -1,7 +1,7 @@
 #version 150
 #define EPSILON 0.000011
 
-uniform sampler2D DiffuseSampler;
+uniform sampler2D InSampler;
 uniform vec2 OutSize;
 uniform float Amount;
 
@@ -31,6 +31,6 @@ void main()
     uv = m + normalize(d) * atan(r * -power * 10.0) * bind / atan(-power * bind * 10.0);
     else
     uv = p;
-    vec3 col = texture2D(DiffuseSampler, vec2(uv.x, uv.y * prop)).rgb;
+    vec3 col = texture2D(InSampler, vec2(uv.x, uv.y * prop)).rgb;
     fragColor = vec4(col, 1.0);
 }

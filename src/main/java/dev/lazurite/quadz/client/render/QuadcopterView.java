@@ -25,8 +25,10 @@ import org.joml.Quaternionf;
 
 public class QuadcopterView extends View implements View.Ticking {
 
-    private static final ManagedShaderEffect STATIC_SHADER = ShaderEffectManager.getInstance().manage(ResourceLocation.fromNamespaceAndPath(Quadz.MODID, "shaders/post/static.json"));
-    private static final ManagedShaderEffect FISHEYE_SHADER = ShaderEffectManager.getInstance().manage(ResourceLocation.fromNamespaceAndPath(Quadz.MODID, "shaders/post/fisheye.json"));
+    // 1.21.2/Satin 3: post effects load via vanilla ShaderManager — bare ids resolving
+    // assets/quadz/post_effect/<id>.json (programs live in shaders/post/).
+    private static final ManagedShaderEffect STATIC_SHADER = ShaderEffectManager.getInstance().manage(ResourceLocation.fromNamespaceAndPath(Quadz.MODID, "static"));
+    private static final ManagedShaderEffect FISHEYE_SHADER = ShaderEffectManager.getInstance().manage(ResourceLocation.fromNamespaceAndPath(Quadz.MODID, "fisheye"));
     private static final Uniform1f STATIC_AMOUNT = STATIC_SHADER.findUniform1f("Amount");
     private static final Uniform1f STATIC_TIMER = STATIC_SHADER.findUniform1f("Time");
     private static final Uniform1f FISHEYE_AMOUNT = FISHEYE_SHADER.findUniform1f("Amount");

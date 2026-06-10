@@ -8,13 +8,13 @@ import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.LivingEntity;
-import net.minecraft.world.entity.ai.targeting.TargetingConditions;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.phys.AABB;
 import net.minecraft.world.phys.Vec3;
 import org.jetbrains.annotations.Nullable;
 
+import java.util.Comparator;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
@@ -82,11 +82,12 @@ public interface Search {
      * @return the nearest {@link Quadcopter}
      */
     static Optional<Quadcopter> forNearestQuad(Level level, Vec3 origin, int range, @Nullable Predicate<LivingEntity> predicate) {
-        return Optional.ofNullable(level.getNearestEntity(
-                Quadcopter.class,
-                TargetingConditions.DEFAULT.selector(predicate),
-                null, origin.x, origin.y, origin.z,
-                new AABB(BlockPos.containing(origin)).inflate(range)));
+        // 1.21.2: Level.getNearestEntity/TargetingConditions became server-only; search manually.
+        return level.getEntitiesOfClass(Quadcopter.class,
+                        new AABB(BlockPos.containing(origin)).inflate(range),
+                        entity -> predicate == null || predicate.test(entity))
+                .stream()
+                .min(Comparator.comparingDouble(entity -> entity.distanceToSqr(origin)));
     }
 
     /**

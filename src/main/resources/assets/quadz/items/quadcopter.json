@@ -1,0 +1,9 @@
+{
+  "model": {
+    "type": "minecraft:special",
+    "base": "quadz:item/quadcopter",
+    "model": {
+      "type": "geckolib:geckolib"
+    }
+  }
+}

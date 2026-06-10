@@ -26,6 +26,7 @@ import net.minecraft.network.syncher.EntityDataAccessor;
 import net.minecraft.network.syncher.EntityDataSerializers;
 import net.minecraft.network.syncher.SynchedEntityData;
 import net.minecraft.resources.ResourceLocation;
+import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.InteractionResult;
@@ -69,7 +70,8 @@ public class Quadcopter extends LivingEntity implements EntityPhysicsElement, Te
 
     public Quadcopter(EntityType<? extends LivingEntity> entityType, Level level) {
         super(entityType, level);
-        this.noCulling = true;
+        // 1.21.2: Entity.noCulling is gone; culling is disabled via
+        // QuadcopterEntityRenderer.affectedByCulling instead.
         this.rigidBody.setBuoyancyType(ElementRigidBody.BuoyancyType.NONE);
         this.rigidBody.setDragType(ElementRigidBody.DragType.SIMPLE);
     }
@@ -203,19 +205,20 @@ public class Quadcopter extends LivingEntity implements EntityPhysicsElement, Te
         return InteractionResult.SUCCESS;
     }
 
+    // 1.21.2: kill/spawnAtLocation take the ServerLevel; hurt() split into hurtServer/hurtClient.
     @Override
-    public void kill() {
+    public void kill(ServerLevel level) {
         var itemStack = new ItemStack(Quadz.QUADCOPTER_ITEM);
         Bindable.get(itemStack).ifPresent(bindable -> bindable.copyFrom(this));
         Templated.get(itemStack).copyFrom(this);
-        this.spawnAtLocation(itemStack);
+        this.spawnAtLocation(level, itemStack);
         this.remove(RemovalReason.KILLED);
     }
 
     @Override
-    public boolean hurt(@NotNull DamageSource source, float amount) {
-        if (!level().isClientSide() && source.getEntity() instanceof ServerPlayer) {
-            this.kill();
+    public boolean hurtServer(ServerLevel level, @NotNull DamageSource source, float amount) {
+        if (source.getEntity() instanceof ServerPlayer) {
+            this.kill(level);
             return true;
         }
 

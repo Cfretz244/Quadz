@@ -5,10 +5,9 @@ import dev.lazurite.quadz.client.QuadzClient;
 import dev.lazurite.quadz.client.render.RenderHooks;
 import dev.lazurite.quadz.common.entity.Quadcopter;
 import net.minecraft.client.Minecraft;
-import net.minecraft.util.profiling.ProfilerFiller;
+import net.minecraft.util.profiling.Profiler;
 import net.minecraft.world.entity.Entity;
 import org.spongepowered.asm.mixin.Mixin;
-import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
@@ -16,11 +15,10 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 @Mixin(Minecraft.class)
 public class MinecraftMixin {
 
-    @Shadow private ProfilerFiller profiler;
-
+    // 1.21.3: Minecraft no longer holds a profiler field; use the global Profiler scope.
     @Inject(method = "runTick", at = @At("TAIL"))
     public void runTick$render(boolean bl, CallbackInfo ci) {
-        RenderHooks.onRenderMinecraft(this.profiler);
+        RenderHooks.onRenderMinecraft(Profiler.get());
     }
 
     @Inject(method = "setCameraEntity", at = @At("HEAD"))

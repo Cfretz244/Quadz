@@ -9,18 +9,22 @@ import dev.lazurite.quadz.common.util.Bindable;
 import dev.lazurite.quadz.client.render.entity.QuadcopterEntityRenderer;
 import dev.lazurite.rayon.impl.bullet.math.Convert;
 import dev.lazurite.toolbox.api.math.QuaternionHelper;
-import net.minecraft.client.renderer.BlockEntityWithoutLevelRenderer;
+import net.minecraft.core.registries.Registries;
+import net.minecraft.network.chat.Component;
+import net.minecraft.resources.ResourceKey;
+import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.InteractionHand;
-import net.minecraft.world.InteractionResultHolder;
+import net.minecraft.world.InteractionResult;
+import net.minecraft.world.entity.EntitySpawnReason;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
-import net.minecraft.world.item.Items;
 import net.minecraft.world.level.ClipContext;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.phys.HitResult;
 import org.jetbrains.annotations.NotNull;
 import software.bernie.geckolib.animatable.GeoItem;
+import software.bernie.geckolib.renderer.GeoItemRenderer;
 import software.bernie.geckolib.animatable.client.GeoRenderProvider;
 import software.bernie.geckolib.animatable.instance.AnimatableInstanceCache;
 import software.bernie.geckolib.animation.AnimatableManager;
@@ -40,18 +44,21 @@ public class QuadcopterItem extends Item implements GeoItem, Templated.Item {
     private final AnimatableInstanceCache cache = GeckoLibUtil.createInstanceCache(this);
 
     public QuadcopterItem() {
-        super(new Properties().stacksTo(1));
+        // 1.21.4: items must carry their registry id in Properties (setId) at construction.
+        super(new Properties().stacksTo(1)
+                .setId(ResourceKey.create(Registries.ITEM, ResourceLocation.fromNamespaceAndPath(Quadz.MODID, "quadcopter"))));
     }
 
+    // 1.21.2: InteractionResultHolder is gone; use() returns InteractionResult directly.
     @Override
-    public InteractionResultHolder<ItemStack> use(Level level, Player player, InteractionHand interactionHand) {
+    public InteractionResult use(Level level, Player player, InteractionHand interactionHand) {
         var itemStack = player.getItemInHand(interactionHand);
         var hitResult = getPlayerPOVHitResult(level, player, ClipContext.Fluid.NONE);
 
         if (level.isClientSide()) {
-            return InteractionResultHolder.success(itemStack); // wave hand
+            return InteractionResult.SUCCESS; // wave hand
         } else {
-            var entity = Quadz.QUADCOPTER.create(level);
+            var entity = Quadz.QUADCOPTER.create(level, EntitySpawnReason.SPAWN_ITEM_USE);
             entity.copyFrom(Templated.get(itemStack));
             Bindable.get(itemStack).ifPresent(entity::copyFrom);
 
@@ -70,19 +77,18 @@ public class QuadcopterItem extends Item implements GeoItem, Templated.Item {
 
             level.addFreshEntity(entity);
             itemStack.shrink(1);
-            itemStack = new ItemStack(Items.AIR);
         }
 
-        return InteractionResultHolder.success(itemStack); // wave hand
+        return InteractionResult.SUCCESS_SERVER; // wave hand
     }
 
-    // GeckoLib 4.7: override createGeoRenderer(Consumer<GeoRenderProvider>); item renderers come
-    // from getGeoItemRenderer() (was getCustomRenderer()).
+    // GeckoLib 4.8: getGeoItemRenderer returns a GeoItemRenderer (BlockEntityWithoutLevelRenderer
+    // was removed by the 1.21.4 item model rework).
     @Override
     public void createGeoRenderer(Consumer<GeoRenderProvider> consumer) {
         consumer.accept(new GeoRenderProvider() {
             @Override
-            public BlockEntityWithoutLevelRenderer getGeoItemRenderer() {
+            public GeoItemRenderer<?> getGeoItemRenderer() {
                 return FormRegistry.getItemRenderer(QuadcopterItem.this);
             }
         });
@@ -98,10 +104,11 @@ public class QuadcopterItem extends Item implements GeoItem, Templated.Item {
         return this.cache;
     }
 
+    // 1.21.2: getDescriptionId(ItemStack) is gone; per-stack names flow through getName(ItemStack).
     @Override
-    public @NotNull String getDescriptionId(ItemStack itemStack) {
+    public @NotNull Component getName(ItemStack itemStack) {
         var template = Templated.get(itemStack).getTemplate();
-        return "template.quadz." + template;
+        return Component.translatable("template.quadz." + template);
     }
 
 }

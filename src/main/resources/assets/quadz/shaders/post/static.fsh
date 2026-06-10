@@ -4,7 +4,7 @@
 https://www.shadertoy.com/view/ldXGW4
 */
 
-uniform sampler2D DiffuseSampler;
+uniform sampler2D InSampler;
 uniform vec2 OutSize;
 uniform float Time;
 uniform float Amount;
@@ -117,9 +117,9 @@ void main()
 
     staticVal *= bottomStaticOpt;
 
-    float red 	=   texture(	DiffuseSampler, 	vec2(uv.x + xOffset -0.01*rgbOffsetOpt,y)).r+staticVal;
-    float green = 	texture(	DiffuseSampler, 	vec2(uv.x + xOffset,	  y)).g+staticVal;
-    float blue 	=	texture(	DiffuseSampler, 	vec2(uv.x + xOffset +0.01*rgbOffsetOpt,y)).b+staticVal;
+    float red 	=   texture(	InSampler, 	vec2(uv.x + xOffset -0.01*rgbOffsetOpt,y)).r+staticVal;
+    float green = 	texture(	InSampler, 	vec2(uv.x + xOffset,	  y)).g+staticVal;
+    float blue 	=	texture(	InSampler, 	vec2(uv.x + xOffset +0.01*rgbOffsetOpt,y)).b+staticVal;
 
     vec3 color = vec3(red,green,blue);
     float scanline = sin(uv.y*800.0)*0.04*scalinesOpt;

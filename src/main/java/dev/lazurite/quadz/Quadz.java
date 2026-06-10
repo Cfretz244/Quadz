@@ -55,7 +55,8 @@ public class Quadz implements ModInitializer {
                     .spawnGroup(MobCategory.MISC)
                     .dimensions(EntityDimensions.scalable(0.5f, 0.2f))
                     .defaultAttributes(LivingEntity::createLivingAttributes)
-                    .build());
+                    // 1.21.4: entity types must be built with their registry key.
+                    .build(ResourceKey.create(Registries.ENTITY_TYPE, ResourceLocation.fromNamespaceAndPath(MODID, "quadcopter"))));
 
     @Override
     public void onInitialize() {
