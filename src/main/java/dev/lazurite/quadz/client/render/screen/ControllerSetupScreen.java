@@ -19,10 +19,10 @@ public class ControllerSetupScreen extends Screen {
 
     private final Screen parent;
 
-    private final ResourceLocation pitchLocation = new ResourceLocation(Quadz.MODID, "pitch");
-    private final ResourceLocation yawLocation = new ResourceLocation(Quadz.MODID, "yaw");
-    private final ResourceLocation rollLocation = new ResourceLocation(Quadz.MODID, "roll");
-    private final ResourceLocation throttleLocation = new ResourceLocation(Quadz.MODID, "throttle");
+    private final ResourceLocation pitchLocation = ResourceLocation.fromNamespaceAndPath(Quadz.MODID, "pitch");
+    private final ResourceLocation yawLocation = ResourceLocation.fromNamespaceAndPath(Quadz.MODID, "yaw");
+    private final ResourceLocation rollLocation = ResourceLocation.fromNamespaceAndPath(Quadz.MODID, "roll");
+    private final ResourceLocation throttleLocation = ResourceLocation.fromNamespaceAndPath(Quadz.MODID, "throttle");
 
     private Button saveButton;
     private Button cancelButton;
@@ -174,7 +174,7 @@ public class ControllerSetupScreen extends Screen {
 
     @Override
     public void render(GuiGraphics guiGraphics, int i, int j, float f) {
-        super.renderDirtBackground(guiGraphics);
+        // 1.21: Screen.renderDirtBackground was removed; super.render() draws the background itself.
         super.render(guiGraphics, i, j, f);
 
         var pitch = JoystickOutput.getAxisValue(null, Config.pitch, this.pitchLocation, Config.pitchInverted, false);

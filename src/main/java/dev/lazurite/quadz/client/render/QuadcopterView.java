@@ -14,9 +14,9 @@ import dev.lazurite.rayon.impl.bullet.math.Convert;
 import dev.lazurite.rayon.impl.bullet.thread.util.Clock;
 import dev.lazurite.toolbox.api.math.QuaternionHelper;
 import dev.lazurite.toolbox.api.math.VectorHelper;
-import ladysnake.satin.api.managed.ManagedShaderEffect;
-import ladysnake.satin.api.managed.ShaderEffectManager;
-import ladysnake.satin.api.managed.uniform.Uniform1f;
+import org.ladysnake.satin.api.managed.ManagedShaderEffect;
+import org.ladysnake.satin.api.managed.ShaderEffectManager;
+import org.ladysnake.satin.api.managed.uniform.Uniform1f;
 import net.minecraft.client.Minecraft;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.util.Mth;
@@ -25,8 +25,8 @@ import org.joml.Quaternionf;
 
 public class QuadcopterView extends View implements View.Ticking {
 
-    private static final ManagedShaderEffect STATIC_SHADER = ShaderEffectManager.getInstance().manage(new ResourceLocation(Quadz.MODID, "shaders/post/static.json"));
-    private static final ManagedShaderEffect FISHEYE_SHADER = ShaderEffectManager.getInstance().manage(new ResourceLocation(Quadz.MODID, "shaders/post/fisheye.json"));
+    private static final ManagedShaderEffect STATIC_SHADER = ShaderEffectManager.getInstance().manage(ResourceLocation.fromNamespaceAndPath(Quadz.MODID, "shaders/post/static.json"));
+    private static final ManagedShaderEffect FISHEYE_SHADER = ShaderEffectManager.getInstance().manage(ResourceLocation.fromNamespaceAndPath(Quadz.MODID, "shaders/post/fisheye.json"));
     private static final Uniform1f STATIC_AMOUNT = STATIC_SHADER.findUniform1f("Amount");
     private static final Uniform1f STATIC_TIMER = STATIC_SHADER.findUniform1f("Time");
     private static final Uniform1f FISHEYE_AMOUNT = FISHEYE_SHADER.findUniform1f("Amount");

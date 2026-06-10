@@ -32,10 +32,10 @@ public class OnScreenDisplay {
 
     public void renderSticks(GuiGraphics guiGraphics, float tickDelta) {
         Search.forPlayer(quadcopter).ifPresent(player -> {
-            var pitch = player.quadz$getJoystickValue(new ResourceLocation(Quadz.MODID, "pitch"));
-            var yaw = player.quadz$getJoystickValue(new ResourceLocation(Quadz.MODID, "yaw"));
-            var roll = player.quadz$getJoystickValue(new ResourceLocation(Quadz.MODID, "roll"));
-            var throttle = (player.quadz$getJoystickValue(new ResourceLocation(Quadz.MODID, "throttle")) + 1.0f);
+            var pitch = player.quadz$getJoystickValue(ResourceLocation.fromNamespaceAndPath(Quadz.MODID, "pitch"));
+            var yaw = player.quadz$getJoystickValue(ResourceLocation.fromNamespaceAndPath(Quadz.MODID, "yaw"));
+            var roll = player.quadz$getJoystickValue(ResourceLocation.fromNamespaceAndPath(Quadz.MODID, "roll"));
+            var throttle = (player.quadz$getJoystickValue(ResourceLocation.fromNamespaceAndPath(Quadz.MODID, "throttle")) + 1.0f);
             var width = Minecraft.getInstance().getWindow().getGuiScaledWidth();
             var height = Minecraft.getInstance().getWindow().getGuiScaledHeight();
             renderSticks(guiGraphics, tickDelta, width / 2, height - 75, 25, 5, pitch, yaw, roll, throttle);

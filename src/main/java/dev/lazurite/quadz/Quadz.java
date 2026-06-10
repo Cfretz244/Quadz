@@ -8,6 +8,7 @@ import dev.lazurite.quadz.common.hooks.ServerNetworkEventHooks;
 import dev.lazurite.quadz.common.item.GogglesItem;
 import dev.lazurite.quadz.common.item.QuadcopterItem;
 import dev.lazurite.quadz.common.item.RemoteItem;
+import dev.lazurite.quadz.common.util.QuadzComponents;
 import dev.lazurite.toolbox.api.network.PacketRegistry;
 import net.fabricmc.api.ModInitializer;
 import net.fabricmc.fabric.api.itemgroup.v1.FabricItemGroup;
@@ -35,10 +36,10 @@ public class Quadz implements ModInitializer {
     public static final Logger LOGGER = LogManager.getLogger("Quadz");
 
     // Items
-    public static final Item GOGGLES_ITEM = Registry.register(BuiltInRegistries.ITEM, new ResourceLocation(MODID, "goggles"), new GogglesItem());
-    public static final Item QUADCOPTER_ITEM = Registry.register(BuiltInRegistries.ITEM, new ResourceLocation(MODID, "quadcopter"), new QuadcopterItem());
-    public static final Item REMOTE_ITEM = Registry.register(BuiltInRegistries.ITEM, new ResourceLocation(MODID, "remote"), new RemoteItem());
-    public static final ResourceKey<CreativeModeTab> CREATIVE_MODE_TAB_KEY = ResourceKey.create(Registries.CREATIVE_MODE_TAB, new ResourceLocation(MODID, "quadz"));
+    public static final Item GOGGLES_ITEM = Registry.register(BuiltInRegistries.ITEM, ResourceLocation.fromNamespaceAndPath(MODID, "goggles"), new GogglesItem());
+    public static final Item QUADCOPTER_ITEM = Registry.register(BuiltInRegistries.ITEM, ResourceLocation.fromNamespaceAndPath(MODID, "quadcopter"), new QuadcopterItem());
+    public static final Item REMOTE_ITEM = Registry.register(BuiltInRegistries.ITEM, ResourceLocation.fromNamespaceAndPath(MODID, "remote"), new RemoteItem());
+    public static final ResourceKey<CreativeModeTab> CREATIVE_MODE_TAB_KEY = ResourceKey.create(Registries.CREATIVE_MODE_TAB, ResourceLocation.fromNamespaceAndPath(MODID, "quadz"));
     public static final CreativeModeTab CREATIVE_MODE_TAB = Registry.register(BuiltInRegistries.CREATIVE_MODE_TAB, CREATIVE_MODE_TAB_KEY,
             FabricItemGroup.builder()
                     .icon(() -> new ItemStack(GOGGLES_ITEM))
@@ -48,7 +49,7 @@ public class Quadz implements ModInitializer {
     // Entities
     public static final EntityType<Quadcopter> QUADCOPTER = Registry.register(
             BuiltInRegistries.ENTITY_TYPE,
-            new ResourceLocation(MODID, "quadcopter"),
+            ResourceLocation.fromNamespaceAndPath(MODID, "quadcopter"),
             FabricEntityTypeBuilder.createLiving()
                     .entityFactory(Quadcopter::new)
                     .spawnGroup(MobCategory.MISC)
@@ -59,6 +60,8 @@ public class Quadz implements ModInitializer {
     @Override
     public void onInitialize() {
         LOGGER.info("Goggles down, thumbs up!");
+
+        QuadzComponents.init();
 
         // Events
         TemplateEvents.ENTITY_TEMPLATE_CHANGED.register(ServerEventHooks::onEntityTemplateChanged);
@@ -76,9 +79,9 @@ public class Quadz implements ModInitializer {
 
     public static class Networking {
 
-        public static final ResourceLocation JOYSTICK_INPUT = new ResourceLocation(MODID, "joystick_input");
-        public static final ResourceLocation REQUEST_QUADCOPTER_VIEW = new ResourceLocation(MODID, "request_quadcopter_view");
-        public static final ResourceLocation REQUEST_PLAYER_VIEW = new ResourceLocation(MODID, "request_player_view");
+        public static final ResourceLocation JOYSTICK_INPUT = ResourceLocation.fromNamespaceAndPath(MODID, "joystick_input");
+        public static final ResourceLocation REQUEST_QUADCOPTER_VIEW = ResourceLocation.fromNamespaceAndPath(MODID, "request_quadcopter_view");
+        public static final ResourceLocation REQUEST_PLAYER_VIEW = ResourceLocation.fromNamespaceAndPath(MODID, "request_player_view");
 
     }
 

@@ -13,11 +13,11 @@ import java.nio.charset.StandardCharsets;
 
 public class SplashResourceLoader implements SimpleSynchronousResourceReloadListener {
 
-    public static final ResourceLocation location = new ResourceLocation(Quadz.MODID, "misc/texts/splashes.txt");
+    public static final ResourceLocation location = ResourceLocation.fromNamespaceAndPath(Quadz.MODID, "misc/texts/splashes.txt");
 
     @Override
     public ResourceLocation getFabricId() {
-        return new ResourceLocation(Quadz.MODID, "splash");
+        return ResourceLocation.fromNamespaceAndPath(Quadz.MODID, "splash");
     }
 
     @Override

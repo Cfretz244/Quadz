@@ -6,9 +6,13 @@ import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.toasts.Toast;
 import net.minecraft.client.gui.components.toasts.ToastComponent;
 import net.minecraft.network.chat.Component;
+import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.item.ItemStack;
 
 public class ControllerConnectedToast implements Toast {
+
+    // 1.21: toasts no longer expose a TEXTURE constant; blit the vanilla toast background sprite.
+    private static final ResourceLocation BACKGROUND_SPRITE = ResourceLocation.withDefaultNamespace("toast/advancement");
 
     private final Component message;
     private final String controllerName;
@@ -25,7 +29,7 @@ public class ControllerConnectedToast implements Toast {
 
     @Override
     public Visibility render(GuiGraphics guiGraphics, ToastComponent toastComponent, long startTime) {
-        guiGraphics.blit(TEXTURE, 0, 0, 0, 0, width(), height());
+        guiGraphics.blitSprite(BACKGROUND_SPRITE, 0, 0, width(), height());
         guiGraphics.drawString(toastComponent.getMinecraft().font, message, 30, 7, -1, false);
         guiGraphics.drawString(toastComponent.getMinecraft().font, Component.literal(controllerName), 30, 18, -1, false);
         guiGraphics.renderFakeItem(new ItemStack(Quadz.REMOTE_ITEM), 8, 8);

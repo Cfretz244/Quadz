@@ -45,11 +45,11 @@ import org.jetbrains.annotations.NotNull;
 import org.joml.Matrix4f;
 import org.joml.Quaternionf;
 import software.bernie.geckolib.animatable.GeoEntity;
-import software.bernie.geckolib.core.animatable.instance.AnimatableInstanceCache;
-import software.bernie.geckolib.core.animation.AnimatableManager;
-import software.bernie.geckolib.core.animation.AnimationController;
-import software.bernie.geckolib.core.animation.RawAnimation;
-import software.bernie.geckolib.core.object.PlayState;
+import software.bernie.geckolib.animatable.instance.AnimatableInstanceCache;
+import software.bernie.geckolib.animation.AnimatableManager;
+import software.bernie.geckolib.animation.AnimationController;
+import software.bernie.geckolib.animation.RawAnimation;
+import software.bernie.geckolib.animation.PlayState;
 import software.bernie.geckolib.util.GeckoLibUtil;
 
 import java.util.ArrayList;
@@ -115,14 +115,14 @@ public class Quadcopter extends LivingEntity implements EntityPhysicsElement, Te
                 this.getRigidBody().prioritize(player);
             }
 
-            var pitch = player.quadz$getJoystickValue(new ResourceLocation(Quadz.MODID, "pitch"));
-            var yaw = -1 * player.quadz$getJoystickValue(new ResourceLocation(Quadz.MODID, "yaw"));
-            var roll = player.quadz$getJoystickValue(new ResourceLocation(Quadz.MODID, "roll"));
-            var throttle = player.quadz$getJoystickValue(new ResourceLocation(Quadz.MODID, "throttle")) + 1.0f;
+            var pitch = player.quadz$getJoystickValue(ResourceLocation.fromNamespaceAndPath(Quadz.MODID, "pitch"));
+            var yaw = -1 * player.quadz$getJoystickValue(ResourceLocation.fromNamespaceAndPath(Quadz.MODID, "yaw"));
+            var roll = player.quadz$getJoystickValue(ResourceLocation.fromNamespaceAndPath(Quadz.MODID, "roll"));
+            var throttle = player.quadz$getJoystickValue(ResourceLocation.fromNamespaceAndPath(Quadz.MODID, "throttle")) + 1.0f;
 
-            var rate = player.quadz$getJoystickValue(new ResourceLocation(Quadz.MODID, "rate"));
-            var superRate = player.quadz$getJoystickValue(new ResourceLocation(Quadz.MODID, "super_rate"));
-            var expo = player.quadz$getJoystickValue(new ResourceLocation(Quadz.MODID, "expo"));
+            var rate = player.quadz$getJoystickValue(ResourceLocation.fromNamespaceAndPath(Quadz.MODID, "rate"));
+            var superRate = player.quadz$getJoystickValue(ResourceLocation.fromNamespaceAndPath(Quadz.MODID, "super_rate"));
+            var expo = player.quadz$getJoystickValue(ResourceLocation.fromNamespaceAndPath(Quadz.MODID, "expo"));
 
             this.rotate(
                     (float) BetaflightHelper.calculateRates(pitch, rate, expo, superRate, 0.05f),
@@ -258,14 +258,15 @@ public class Quadcopter extends LivingEntity implements EntityPhysicsElement, Te
         return Direction.fromYRot(QuaternionHelper.getYaw(Convert.toMinecraft(getPhysicsRotation(new Quaternion(), 1.0f))));
     }
 
+    // 1.21: defineSynchedData receives a SynchedEntityData.Builder and registers via builder.define(...).
     @Override
-    protected void defineSynchedData() {
-        super.defineSynchedData();
-        getEntityData().define(TEMPLATE, "");
-        getEntityData().define(PREV_TEMPLATE, "");
-        getEntityData().define(ARMED, false);
-        getEntityData().define(BIND_ID, 0);
-        getEntityData().define(CAMERA_ANGLE, 0);
+    protected void defineSynchedData(SynchedEntityData.Builder builder) {
+        super.defineSynchedData(builder);
+        builder.define(TEMPLATE, "");
+        builder.define(PREV_TEMPLATE, "");
+        builder.define(ARMED, false);
+        builder.define(BIND_ID, 0);
+        builder.define(CAMERA_ANGLE, 0);
     }
 
 //    @Override

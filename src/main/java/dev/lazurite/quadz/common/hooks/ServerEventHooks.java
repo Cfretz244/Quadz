@@ -24,7 +24,8 @@ public class ServerEventHooks {
     }
 
     public static void onTemplateLoaded(Template template) {
-        Quadz.CREATIVE_MODE_TAB.rebuildSearchTree();
+        // 1.21: CreativeModeTab.rebuildSearchTree() was removed. The creative search index is rebuilt
+        // by the menu itself when (re)opened, so a newly loaded template still becomes searchable.
     }
 
     public static void onRebuildCreativeTab(FabricItemGroupEntries content) {

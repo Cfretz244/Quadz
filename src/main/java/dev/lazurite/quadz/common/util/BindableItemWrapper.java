@@ -1,34 +1,29 @@
 package dev.lazurite.quadz.common.util;
 
-import net.minecraft.nbt.CompoundTag;
 import net.minecraft.world.item.ItemStack;
 
 /**
  * Stores the bind id in the transmitter through the {@link Bindable} interface.
+ * 1.20.5+: backed by the {@link QuadzComponents#BIND_ID} data component rather than a live, mutable
+ * NBT sub-tag (components are immutable, so we hold the stack and set/get the component value).
  * @see Bindable
  */
 public class BindableItemWrapper implements Bindable {
 
     private final ItemStack stack;
-    private final CompoundTag tag;
 
     public BindableItemWrapper(ItemStack stack) {
         this.stack = stack;
-        this.tag = this.stack.getOrCreateTagElement("bindable");
     }
 
     @Override
     public void setBindId(int bindId) {
-        tag.putInt("bind_id", bindId);
+        stack.set(QuadzComponents.BIND_ID, bindId);
     }
 
     @Override
     public int getBindId() {
-        if (!tag.contains("bind_id")) {
-            this.setBindId(-1);
-        }
-
-        return tag.getInt("bind_id");
+        return stack.getOrDefault(QuadzComponents.BIND_ID, -1);
     }
 
     public ItemStack getStack() {

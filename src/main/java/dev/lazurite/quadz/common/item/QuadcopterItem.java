@@ -21,16 +21,15 @@ import net.minecraft.world.level.Level;
 import net.minecraft.world.phys.HitResult;
 import org.jetbrains.annotations.NotNull;
 import software.bernie.geckolib.animatable.GeoItem;
-import software.bernie.geckolib.animatable.client.RenderProvider;
-import software.bernie.geckolib.core.animatable.instance.AnimatableInstanceCache;
-import software.bernie.geckolib.core.animation.AnimatableManager;
-import software.bernie.geckolib.core.animation.AnimationController;
-import software.bernie.geckolib.core.object.PlayState;
+import software.bernie.geckolib.animatable.client.GeoRenderProvider;
+import software.bernie.geckolib.animatable.instance.AnimatableInstanceCache;
+import software.bernie.geckolib.animation.AnimatableManager;
+import software.bernie.geckolib.animation.AnimationController;
+import software.bernie.geckolib.animation.PlayState;
 import software.bernie.geckolib.util.GeckoLibUtil;
 
 import java.util.Random;
 import java.util.function.Consumer;
-import java.util.function.Supplier;
 
 /**
  * Represents a quadcopter, allows the player to spawn with right-click on the ground.
@@ -39,7 +38,6 @@ import java.util.function.Supplier;
 public class QuadcopterItem extends Item implements GeoItem, Templated.Item {
 
     private final AnimatableInstanceCache cache = GeckoLibUtil.createInstanceCache(this);
-    private final Supplier<Object> renderProvider = GeoItem.makeRenderer(this);
 
     public QuadcopterItem() {
         super(new Properties().stacksTo(1));
@@ -78,19 +76,16 @@ public class QuadcopterItem extends Item implements GeoItem, Templated.Item {
         return InteractionResultHolder.success(itemStack); // wave hand
     }
 
+    // GeckoLib 4.7: override createGeoRenderer(Consumer<GeoRenderProvider>); item renderers come
+    // from getGeoItemRenderer() (was getCustomRenderer()).
     @Override
-    public void createRenderer(Consumer<Object> consumer) {
-        consumer.accept(new RenderProvider() {
+    public void createGeoRenderer(Consumer<GeoRenderProvider> consumer) {
+        consumer.accept(new GeoRenderProvider() {
             @Override
-            public BlockEntityWithoutLevelRenderer getCustomRenderer() {
+            public BlockEntityWithoutLevelRenderer getGeoItemRenderer() {
                 return FormRegistry.getItemRenderer(QuadcopterItem.this);
             }
         });
-    }
-
-    @Override
-    public Supplier<Object> getRenderProvider() {
-        return this.renderProvider;
     }
 
     @Override

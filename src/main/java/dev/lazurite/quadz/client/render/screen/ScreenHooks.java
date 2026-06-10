@@ -2,12 +2,11 @@ package dev.lazurite.quadz.client.render.screen;
 
 import dev.lazurite.quadz.Quadz;
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.gui.components.ImageButton;
+import net.minecraft.client.gui.components.Button;
 import net.minecraft.client.gui.screens.PauseScreen;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.client.gui.screens.TitleScreen;
 import net.minecraft.network.chat.Component;
-import net.minecraft.resources.ResourceLocation;
 
 public class ScreenHooks {
 
@@ -27,14 +26,15 @@ public class ScreenHooks {
         );
     }
 
-    private static ImageButton getButton(Screen parent, int x, int y) {
-        return new ImageButton(
-                x, y, 20, 20, 0, 0, 20,
-                new ResourceLocation(Quadz.MODID, "textures/gui/quadz.png"),
-                32, 64,
-                button -> Minecraft.getInstance().setScreen(new ControllerSetupScreen(parent)),
-                Component.translatable("quadz.config.title")
-        );
+    // 1.21: ImageButton's constructor switched to the WidgetSprites system. The Quadz icon texture
+    // isn't set up as a GUI sprite, so use a plain text Button (this entry point is dev-unreachable
+    // without Mod Menu and purely opens the controller-setup screen).
+    private static Button getButton(Screen parent, int x, int y) {
+        return Button.builder(
+                        Component.translatable("quadz.config.title"),
+                        button -> Minecraft.getInstance().setScreen(new ControllerSetupScreen(parent)))
+                .bounds(x, y, 20, 20)
+                .build();
     }
 
 }
