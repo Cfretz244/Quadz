@@ -6,7 +6,7 @@ import net.minecraft.client.gui.Font;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.toasts.Toast;
 import net.minecraft.client.gui.components.toasts.ToastManager;
-import net.minecraft.client.renderer.RenderType;
+import net.minecraft.client.renderer.RenderPipelines;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.item.ItemStack;
@@ -45,7 +45,7 @@ public class ControllerConnectedToast implements Toast {
 
     @Override
     public void render(GuiGraphics guiGraphics, Font font, long startTime) {
-        guiGraphics.blitSprite(RenderType::guiTextured, BACKGROUND_SPRITE, 0, 0, width(), height());
+        guiGraphics.blitSprite(RenderPipelines.GUI_TEXTURED, BACKGROUND_SPRITE, 0, 0, width(), height());
         guiGraphics.drawString(font, message, 30, 7, -1, false);
         guiGraphics.drawString(font, Component.literal(controllerName), 30, 18, -1, false);
         guiGraphics.renderFakeItem(new ItemStack(Quadz.REMOTE_ITEM), 8, 8);

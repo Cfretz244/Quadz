@@ -2,8 +2,15 @@
 #define EPSILON 0.000011
 
 uniform sampler2D InSampler;
-uniform vec2 OutSize;
-uniform float Amount;
+
+layout(std140) uniform SamplerInfo {
+    vec2 OutSize;
+    vec2 InSize;
+};
+
+layout(std140) uniform FisheyeConfig {
+    float Amount;
+};
 
 /*
 https://www.shadertoy.com/view/4s2GRR
@@ -14,8 +21,8 @@ in vec2 texCoord;
 
 void main()
 {
-    vec2 p = gl_FragCoord.xy / OutSize.x;
     float prop = OutSize.x / OutSize.y;
+    vec2 p = vec2(texCoord.x, texCoord.y / prop);
     vec2 m = vec2(0.5, 0.5 / prop);
     vec2 d = p - m;
     float r = sqrt(dot(d, d));
@@ -31,6 +38,6 @@ void main()
     uv = m + normalize(d) * atan(r * -power * 10.0) * bind / atan(-power * bind * 10.0);
     else
     uv = p;
-    vec3 col = texture2D(InSampler, vec2(uv.x, uv.y * prop)).rgb;
+    vec3 col = texture(InSampler, vec2(uv.x, uv.y * prop)).rgb;
     fragColor = vec4(col, 1.0);
 }

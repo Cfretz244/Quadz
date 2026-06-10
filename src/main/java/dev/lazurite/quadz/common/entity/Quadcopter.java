@@ -20,7 +20,6 @@ import dev.lazurite.rayon.impl.bullet.math.Convert;
 import dev.lazurite.toolbox.api.math.QuaternionHelper;
 import dev.lazurite.toolbox.api.math.VectorHelper;
 import net.minecraft.core.Direction;
-import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.syncher.EntityDataAccessor;
 import net.minecraft.network.syncher.EntityDataSerializers;
@@ -39,6 +38,8 @@ import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
 import net.minecraft.world.level.Level;
+import net.minecraft.world.level.storage.ValueInput;
+import net.minecraft.world.level.storage.ValueOutput;
 import net.minecraft.world.level.block.BushBlock;
 import net.minecraft.world.level.block.VineBlock;
 import net.minecraft.world.phys.Vec3;
@@ -47,13 +48,12 @@ import org.joml.Matrix4f;
 import org.joml.Quaternionf;
 import software.bernie.geckolib.animatable.GeoEntity;
 import software.bernie.geckolib.animatable.instance.AnimatableInstanceCache;
-import software.bernie.geckolib.animation.AnimatableManager;
-import software.bernie.geckolib.animation.AnimationController;
+import software.bernie.geckolib.animatable.manager.AnimatableManager;
+import software.bernie.geckolib.animatable.processing.AnimationController;
 import software.bernie.geckolib.animation.RawAnimation;
 import software.bernie.geckolib.animation.PlayState;
 import software.bernie.geckolib.util.GeckoLibUtil;
 
-import java.util.ArrayList;
 import java.util.Optional;
 
 public class Quadcopter extends LivingEntity implements EntityPhysicsElement, Templated, GeoEntity, Bindable {
@@ -194,7 +194,7 @@ public class Quadcopter extends LivingEntity implements EntityPhysicsElement, Te
     @Override
     public InteractionResult interact(Player player, InteractionHand hand) {
         if (!level().isClientSide()) {
-            final var stack = player.getInventory().getSelected();
+            final var stack = player.getInventory().getSelectedItem();
 
             if (stack.getItem() instanceof RemoteItem) {
                 Bindable.get(stack).ifPresent(bindable -> Bindable.bind(this, bindable));
@@ -225,20 +225,21 @@ public class Quadcopter extends LivingEntity implements EntityPhysicsElement, Te
         return false;
     }
 
+    // 1.21.6: entity save data flows through ValueInput/ValueOutput instead of CompoundTag.
     @Override
-    public void readAdditionalSaveData(CompoundTag tag) {
-        super.readAdditionalSaveData(tag);
-        getEntityData().set(TEMPLATE, tag.getString("template"));
-        getEntityData().set(BIND_ID, tag.getInt("bind_id"));
-        getEntityData().set(CAMERA_ANGLE, tag.getInt("camera_angle"));
+    public void readAdditionalSaveData(ValueInput input) {
+        super.readAdditionalSaveData(input);
+        getEntityData().set(TEMPLATE, input.getStringOr("template", ""));
+        getEntityData().set(BIND_ID, input.getIntOr("bind_id", 0));
+        getEntityData().set(CAMERA_ANGLE, input.getIntOr("camera_angle", 0));
     }
 
     @Override
-    public void addAdditionalSaveData(CompoundTag tag) {
-        super.addAdditionalSaveData(tag);
-        tag.putString("template", getTemplate());
-        tag.putInt("bind_id", getEntityData().get(BIND_ID));
-        tag.putInt("camera_angle", getEntityData().get(CAMERA_ANGLE));
+    public void addAdditionalSaveData(ValueOutput output) {
+        super.addAdditionalSaveData(output);
+        output.putString("template", getTemplate());
+        output.putInt("bind_id", getEntityData().get(BIND_ID));
+        output.putInt("camera_angle", getEntityData().get(CAMERA_ANGLE));
     }
 
     @Override
@@ -279,7 +280,7 @@ public class Quadcopter extends LivingEntity implements EntityPhysicsElement, Te
 
 //    @Override
     public boolean shouldPlayerBeViewing(Player player) {
-        return player != null && player.getInventory().armor.get(3).getItem() instanceof GogglesItem;
+        return player != null && player.getItemBySlot(EquipmentSlot.HEAD).getItem() instanceof GogglesItem;
     }
 
     @Override
@@ -290,11 +291,6 @@ public class Quadcopter extends LivingEntity implements EntityPhysicsElement, Te
     @Override
     public boolean isPickable() {
         return true;
-    }
-
-    @Override
-    public Iterable<ItemStack> getArmorSlots() {
-        return new ArrayList<>();
     }
 
     @Override
@@ -319,7 +315,7 @@ public class Quadcopter extends LivingEntity implements EntityPhysicsElement, Te
 
     @Override
     public void registerControllers(AnimatableManager.ControllerRegistrar controllerRegistrar) {
-        controllerRegistrar.add(new AnimationController<>(this, 0, state -> {
+        controllerRegistrar.add(new AnimationController<Quadcopter>(0, state -> {
             if (this.isArmed()) {
                 return state.setAndContinue(RawAnimation.begin().thenLoop("armed"));
             }

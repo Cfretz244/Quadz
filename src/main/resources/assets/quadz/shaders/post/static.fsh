@@ -5,9 +5,11 @@ https://www.shadertoy.com/view/ldXGW4
 */
 
 uniform sampler2D InSampler;
-uniform vec2 OutSize;
-uniform float Time;
-uniform float Amount;
+
+layout(std140) uniform StaticConfig {
+    float Amount;
+    float Time;
+};
 
 // change these values to 0.0 to turn off individual effects
 float vertJerkOpt = 1.0;
@@ -93,7 +95,7 @@ in vec2 texCoord;
 
 void main()
 {
-    vec2 uv = gl_FragCoord.xy/OutSize.xy;
+    vec2 uv = texCoord;
 
     float jerkOffset = (1.0-step(snoise(vec2(Time*1.3,5.0)),0.8))*0.05;
 

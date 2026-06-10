@@ -27,8 +27,8 @@ import software.bernie.geckolib.animatable.GeoItem;
 import software.bernie.geckolib.renderer.GeoItemRenderer;
 import software.bernie.geckolib.animatable.client.GeoRenderProvider;
 import software.bernie.geckolib.animatable.instance.AnimatableInstanceCache;
-import software.bernie.geckolib.animation.AnimatableManager;
-import software.bernie.geckolib.animation.AnimationController;
+import software.bernie.geckolib.animatable.manager.AnimatableManager;
+import software.bernie.geckolib.animatable.processing.AnimationController;
 import software.bernie.geckolib.animation.PlayState;
 import software.bernie.geckolib.util.GeckoLibUtil;
 
@@ -63,14 +63,14 @@ public class QuadcopterItem extends Item implements GeoItem, Templated.Item {
             Bindable.get(itemStack).ifPresent(entity::copyFrom);
 
             if (hitResult.getType() == HitResult.Type.BLOCK) {
-                entity.absMoveTo(hitResult.getLocation().x, hitResult.getLocation().y, hitResult.getLocation().z);
+                entity.absSnapTo(hitResult.getLocation().x, hitResult.getLocation().y, hitResult.getLocation().z);
                 entity.getRigidBody().setPhysicsRotation(Convert.toBullet(QuaternionHelper.rotateY(Convert.toMinecraft(new Quaternion()), -player.getYRot())));
             } else {
                 var random = new Random();
                 var direction = hitResult.getLocation().subtract(player.position()).add(0, player.getEyeHeight(), 0).normalize();
                 var pos = player.position().add(direction);
 
-                entity.absMoveTo(pos.x, pos.y, pos.z);
+                entity.absSnapTo(pos.x, pos.y, pos.z);
                 entity.getRigidBody().setLinearVelocity(Convert.toBullet(direction).multLocal(4).multLocal(new Vector3f(1, 3, 1)));
                 entity.getRigidBody().setAngularVelocity(new Vector3f(random.nextFloat() * 2, random.nextFloat() * 2, random.nextFloat() * 2));
             }
@@ -96,7 +96,7 @@ public class QuadcopterItem extends Item implements GeoItem, Templated.Item {
 
     @Override
     public void registerControllers(AnimatableManager.ControllerRegistrar controllers) {
-        controllers.add(new AnimationController<>(this, 20, state -> PlayState.CONTINUE));
+        controllers.add(new AnimationController<QuadcopterItem>(20, state -> PlayState.CONTINUE));
     }
 
     @Override

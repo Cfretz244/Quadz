@@ -6,9 +6,10 @@
   "client": [
     "CameraTypeMixin",
     "GameRendererMixin",
-    "GuiMixin",
     "MinecraftMixin",
     "PauseScreenMixin",
+    "PostChainAccessor",
+    "PostPassAccessor",
     "TitleScreenMixin"
   ],
   "injectors": {

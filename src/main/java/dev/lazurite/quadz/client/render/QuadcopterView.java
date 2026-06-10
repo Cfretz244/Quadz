@@ -14,24 +14,13 @@ import dev.lazurite.rayon.impl.bullet.math.Convert;
 import dev.lazurite.rayon.impl.bullet.thread.util.Clock;
 import dev.lazurite.toolbox.api.math.QuaternionHelper;
 import dev.lazurite.toolbox.api.math.VectorHelper;
-import org.ladysnake.satin.api.managed.ManagedShaderEffect;
-import org.ladysnake.satin.api.managed.ShaderEffectManager;
-import org.ladysnake.satin.api.managed.uniform.Uniform1f;
+import dev.lazurite.quadz.client.render.shader.PostEffects;
 import net.minecraft.client.Minecraft;
-import net.minecraft.resources.ResourceLocation;
 import net.minecraft.util.Mth;
 import net.minecraft.world.phys.Vec3;
 import org.joml.Quaternionf;
 
 public class QuadcopterView extends View implements View.Ticking {
-
-    // 1.21.2/Satin 3: post effects load via vanilla ShaderManager — bare ids resolving
-    // assets/quadz/post_effect/<id>.json (programs live in shaders/post/).
-    private static final ManagedShaderEffect STATIC_SHADER = ShaderEffectManager.getInstance().manage(ResourceLocation.fromNamespaceAndPath(Quadz.MODID, "static"));
-    private static final ManagedShaderEffect FISHEYE_SHADER = ShaderEffectManager.getInstance().manage(ResourceLocation.fromNamespaceAndPath(Quadz.MODID, "fisheye"));
-    private static final Uniform1f STATIC_AMOUNT = STATIC_SHADER.findUniform1f("Amount");
-    private static final Uniform1f STATIC_TIMER = STATIC_SHADER.findUniform1f("Time");
-    private static final Uniform1f FISHEYE_AMOUNT = FISHEYE_SHADER.findUniform1f("Amount");
 
     private static final int SIGNAL_DISTANCE = 1024;
 
@@ -48,11 +37,11 @@ public class QuadcopterView extends View implements View.Ticking {
 
     @Override
     public void tick() {
-        FISHEYE_AMOUNT.set(Config.fisheyeAmount);
+        PostEffects.fisheyeAmount = Config.fisheyeAmount;
 
         var distance = getQuadcopter().distanceTo(Minecraft.getInstance().player);
         var lineOfSight = getQuadcopter().hasLineOfSight(Minecraft.getInstance().player);
-        STATIC_AMOUNT.set(lineOfSight ? Mth.clamp(distance / (float) SIGNAL_DISTANCE, 0.0f, 1.0f) * 2.0f : 2.0f);
+        PostEffects.staticAmount = lineOfSight ? Mth.clamp(distance / (float) SIGNAL_DISTANCE, 0.0f, 1.0f) * 2.0f : 2.0f;
     }
 
     @Override
@@ -73,21 +62,23 @@ public class QuadcopterView extends View implements View.Ticking {
     }
 
     public void onGuiRender(GuiGraphics guiGraphics, float tickDelta) {
-        var firstPerson = Minecraft.getInstance().options.getCameraType().isFirstPerson();
-
-        if (firstPerson && Config.fisheyeEnabled) {
-            FISHEYE_SHADER.render(tickDelta);
-        }
-
         if (Config.osdEnabled) {
             this.osd.renderVelocity(guiGraphics, tickDelta);
             this.osd.renderSticks(guiGraphics, tickDelta);
         }
+    }
 
-        if (firstPerson && Config.videoInterferenceEnabled) {
-            STATIC_TIMER.set(clock.get());
-            STATIC_SHADER.render(tickDelta);
-        }
+    /**
+     * Called from the GameRenderer post-effect hook each frame (1.21.5+ pipeline) — the shader
+     * passes no longer run inside the GUI render.
+     */
+    public void onPostEffectRender() {
+        var firstPerson = Minecraft.getInstance().options.getCameraType().isFirstPerson();
+
+        PostEffects.fisheyeEnabled = firstPerson && Config.fisheyeEnabled;
+        PostEffects.staticEnabled = firstPerson && Config.videoInterferenceEnabled;
+        PostEffects.staticTime = clock.get();
+        PostEffects.render();
     }
 
     @Override

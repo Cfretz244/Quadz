@@ -18,8 +18,10 @@ import dev.lazurite.toolbox.api.event.ClientEvents;
 import dev.lazurite.toolbox.api.network.PacketRegistry;
 import net.fabricmc.api.ClientModInitializer;
 import net.fabricmc.fabric.api.client.rendering.v1.EntityRendererRegistry;
+import net.fabricmc.fabric.api.client.rendering.v1.hud.HudElementRegistry;
 import net.fabricmc.fabric.api.resource.ResourceManagerHelper;
 import net.minecraft.client.Minecraft;
+import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.packs.PackType;
 
 import java.util.Optional;
@@ -58,6 +60,12 @@ public class QuadzClient implements ClientModInitializer {
         // Renderer
         EntityRendererRegistry.register(Quadz.QUADCOPTER, QuadcopterEntityRenderer::new);
         FormRegistry.register((Templated.Item) Quadz.QUADCOPTER_ITEM);
+
+        // FPV on-screen display — 1.21.6 deferred GUI pipeline: registered as a HUD element
+        // (replaces the old Gui.render TAIL mixin); post effects run from the GameRenderer hook.
+        HudElementRegistry.addLast(ResourceLocation.fromNamespaceAndPath(Quadz.MODID, "osd"), (guiGraphics, deltaTracker) ->
+                getQuadcopterFromCamera().ifPresent(quadcopter ->
+                        quadcopter.getView().onGuiRender(guiGraphics, deltaTracker.getGameTimeDeltaPartialTick(false))));
 
         // Splash screen text injection
         ResourceManagerHelper.get(PackType.CLIENT_RESOURCES).registerReloadListener(new SplashResourceLoader());

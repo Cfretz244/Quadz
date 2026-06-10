@@ -7,12 +7,10 @@ import dev.lazurite.quadz.common.util.JoystickOutput;
 import dev.lazurite.quadz.client.Config;
 import dev.lazurite.quadz.client.QuadzClient;
 import dev.lazurite.rayon.impl.bullet.math.Convert;
-import dev.lazurite.toolbox.api.math.QuaternionHelper;
 import dev.lazurite.toolbox.api.math.VectorHelper;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.OptionInstance;
 import net.minecraft.util.profiling.ProfilerFiller;
-import org.joml.Quaternionf;
 
 import java.util.Map;
 
@@ -62,22 +60,6 @@ public class RenderHooks {
             next = System.currentTimeMillis() + 500;
             loaded = true;
         }
-    }
-
-    public static Quaternionf onMultiplyYaw(Quaternionf quaternion) {
-        if (QuadzClient.getQuadcopterFromCamera().isPresent()) {
-            return QuaternionHelper.rotateY(new Quaternionf(0, 0, 0, 1), 180);
-        }
-
-        return quaternion;
-    }
-
-    public static Quaternionf onMultiplyPitch(Quaternionf quaternion) {
-        if (QuadzClient.getQuadcopterFromCamera().isPresent()) {
-            return new Quaternionf(0, 0, 0, 1);
-        }
-
-        return quaternion;
     }
 
 }
