@@ -32,9 +32,18 @@ public class ServerEventHooks {
         content.accept(new ItemStack(Quadz.GOGGLES_ITEM));
         content.accept(new ItemStack(Quadz.REMOTE_ITEM));
 
-        TemplateLoader.getTemplateByModId(Quadz.MODID).forEach(
-                template -> content.accept(TemplateLoader.getItemStackFor(template, Quadz.QUADCOPTER_ITEM))
-        );
+        final var templates = TemplateLoader.getTemplateByModId(Quadz.MODID);
+        Quadz.LOGGER.info("Creative tab rebuild: {} quadz templates", templates.size());
+
+        templates.forEach(template -> {
+            final var stack = TemplateLoader.getItemStackFor(template, Quadz.QUADCOPTER_ITEM);
+
+            if (stack != null) {
+                content.accept(stack);
+            } else {
+                Quadz.LOGGER.warn("No item stack for template {} (originDistance={})", template.getId(), template.originDistance());
+            }
+        });
     }
 
 }
