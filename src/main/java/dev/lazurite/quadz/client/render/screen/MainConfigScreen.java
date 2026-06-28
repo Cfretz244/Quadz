@@ -7,7 +7,6 @@ import dev.lazurite.quadz.common.util.RateProfile;
 import me.shedaniel.clothconfig2.api.ConfigBuilder;
 import me.shedaniel.clothconfig2.api.Requirement;
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.gui.components.Button;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.network.chat.Component;
 
@@ -35,7 +34,9 @@ public interface MainConfigScreen {
                 entryBuilder.startEnumSelector(Component.translatable("quadz.config.controller.rate_profile"), RateProfile.class, Config.rateProfile)
                         .setEnumNameProvider(profile -> ((RateProfile) profile).getTranslation())
                         .setTooltip(Component.translatable("quadz.config.controller.rate_profile.tooltip"))
-                        .setDefaultValue(RateProfile.BETAFLIGHT)
+                        // Intentionally no default value: cloth's per-entry reset arrow would otherwise
+                        // revert the *profile selection* (to a default profile), which reads as a bug.
+                        // Each profile's value fields keep their own reset arrows for resetting values.
                         .setSaveConsumer(value -> Config.rateProfile = value)
                         .build();
         controllerCategory.addEntry(profileEntry);
@@ -167,9 +168,7 @@ public interface MainConfigScreen {
         );
 
         builder.setGlobalized(true);
-        var screen = builder.build();
-        screen.addRenderableWidget(Button.builder(Component.literal("TEST"), button -> {}).pos(100, 100).size(60, 20).build());
-        return screen;
+        return builder.build();
     }
 
 }
