@@ -30,13 +30,16 @@ public enum RateProfile {
         };
     }
 
-    /** Betaflight "Actual" rates. p1 = center sensitivity, p2 = max rate, p3 = expo (0..1). */
+    /**
+     * Betaflight "Actual" rates. p1 = center sensitivity, p2 = max rate (both in deg/s, e.g. 200
+     * and 900), p3 = expo (0..1). Values are used directly as deg/s — do NOT rescale them, or a
+     * sensible 900 turns into a 180000 deg/s sensitivity where any stick noise spins the quad.
+     */
     private static double actual(double rcCommand, double centerSensitivity, double maxRate, double expo, double delta) {
         final var absCmd = Math.abs(rcCommand);
         final var expof = absCmd * (Math.pow(rcCommand, 5) * expo + rcCommand * (1.0 - expo));
-        final var center = centerSensitivity * 200.0;
-        final var stickMovement = Math.max(0.0, maxRate * 200.0 - center);
-        final var angleRate = rcCommand * center + stickMovement * expof;
+        final var stickMovement = Math.max(0.0, maxRate - centerSensitivity);
+        final var angleRate = rcCommand * centerSensitivity + stickMovement * expof;
         return angleRate * delta;
     }
 
