@@ -132,11 +132,18 @@ public class Quadcopter extends LivingEntity implements EntityPhysicsElement, Te
             var profileIndex = Math.round(player.quadz$getJoystickValue(Identifier.fromNamespaceAndPath(Quadz.MODID, "rate_profile")));
             var profile = profiles[Math.max(0, Math.min(profiles.length - 1, profileIndex))];
 
-            this.rotate(
-                    (float) profile.calculate(pitch, rate, superRate, expo, 0.05f),
-                    (float) profile.calculate(yaw, rate, superRate, expo, 0.05f),
-                    (float) profile.calculate(roll, rate, superRate, expo, 0.05f)
-            );
+            var outPitch = (float) profile.calculate(pitch, rate, superRate, expo, 0.05f);
+            var outYaw = (float) profile.calculate(yaw, rate, superRate, expo, 0.05f);
+            var outRoll = (float) profile.calculate(roll, rate, superRate, expo, 0.05f);
+
+            // TEMP DIAGNOSTIC: trace rate inputs/outputs (server, ~1/sec) to pin down the Actual
+            // profile misbehaviour. Remove once fixed.
+            if (!this.level().isClientSide() && this.tickCount % 20 == 0) {
+                Quadz.LOGGER.info("[RATE-DEBUG] profile={} idx={} in(p/y/r)={}/{}/{} cfg(rate/super/expo)={}/{}/{} out(p/y/r)={}/{}/{}",
+                        profile, profileIndex, pitch, yaw, roll, rate, superRate, expo, outPitch, outYaw, outRoll);
+            }
+
+            this.rotate(outPitch, outYaw, outRoll);
 
             // Decrease angular velocity
             if (throttle > 0.1f) {
