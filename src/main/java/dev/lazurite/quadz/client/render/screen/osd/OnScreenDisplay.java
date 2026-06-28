@@ -71,8 +71,9 @@ public class OnScreenDisplay {
         guiGraphics.fill(leftX - scale, y, leftX + scale + 1, y + 1, 0xFFFFFFFF);
         guiGraphics.fill(rightX - scale, y, rightX + scale + 1, y + 1, 0xFFFFFFFF);
 
-        // Draw stick positions
-        int dotSize = 2;
+        // Draw stick positions. Dot size scales with the gimbal size so it keeps the same
+        // relative width at any overlay scale (was a fixed 2px, which looked huge when shrunk).
+        int dotSize = Math.max(1, Math.round(scale * 0.08f));
         int yawAdjusted = (int) (yaw * scale);
         int throttleAdjusted = (int) (throttle * scale) - scale;
         int rollAdjusted = (int) (roll * scale);
