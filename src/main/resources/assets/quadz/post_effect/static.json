@@ -4,7 +4,7 @@
   },
   "passes": [
     {
-      "vertex_shader": "minecraft:post/blit",
+      "vertex_shader": "minecraft:core/screenquad",
       "fragment_shader": "quadz:post/static",
       "inputs": [
         {
@@ -21,7 +21,7 @@
       }
     },
     {
-      "vertex_shader": "minecraft:post/blit",
+      "vertex_shader": "minecraft:core/screenquad",
       "fragment_shader": "minecraft:post/blit",
       "inputs": [
         {
