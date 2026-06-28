@@ -1,8 +1,11 @@
 package dev.lazurite.quadz.client.render.screen;
 
 import dev.lazurite.quadz.client.Config;
+import dev.lazurite.quadz.client.event.ClientEventHooks;
 import dev.lazurite.quadz.client.render.screen.osd.VelocityUnit;
+import dev.lazurite.quadz.common.util.RateProfile;
 import me.shedaniel.clothconfig2.api.ConfigBuilder;
+import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.components.Button;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.network.chat.Component;
@@ -13,28 +16,43 @@ public interface MainConfigScreen {
         var builder = ConfigBuilder.create()
             .setParentScreen(parent)
             .setTitle(Component.translatable("quadz.config.title"))
-            .setSavingRunnable(Config::save);
+            .setSavingRunnable(() -> {
+                Config.save();
+                // Re-push rate/profile to the synced joystick values so changes apply without relog.
+                ClientEventHooks.applyRateConfig(Minecraft.getInstance().player);
+            });
 
         var entryBuilder = builder.entryBuilder();
         var controllerCategory = builder.getOrCreateCategory(Component.translatable("quadz.config.controller.title"));
         var visualsCategory = builder.getOrCreateCategory(Component.translatable("quadz.config.visuals.title"));
 
+        // The three rate fields below are labelled to match the selected profile's terminology.
+        // (v1: labels update when the screen is reopened after switching profiles.)
         controllerCategory.addEntry(
-                entryBuilder.startFloatField(Component.translatable("quadz.config.controller.rate"), Config.rate)
+                entryBuilder.startEnumSelector(Component.translatable("quadz.config.controller.rate_profile"), RateProfile.class, Config.rateProfile)
+                        .setEnumNameProvider(profile -> ((RateProfile) profile).getTranslation())
+                        .setTooltip(Component.translatable("quadz.config.controller.rate_profile.tooltip"))
+                        .setDefaultValue(Config.rateProfile)
+                        .setSaveConsumer(value -> Config.rateProfile = value)
+                        .build()
+        );
+
+        controllerCategory.addEntry(
+                entryBuilder.startFloatField(Component.translatable(Config.rateProfile.rateKey()), Config.rate)
                         .setDefaultValue(Config.rate)
                         .setSaveConsumer(value -> Config.rate = value)
                         .build()
         );
 
         controllerCategory.addEntry(
-                entryBuilder.startFloatField(Component.translatable("quadz.config.controller.superRate"), Config.superRate)
+                entryBuilder.startFloatField(Component.translatable(Config.rateProfile.superRateKey()), Config.superRate)
                         .setDefaultValue(Config.superRate)
                         .setSaveConsumer(value -> Config.superRate = value)
                         .build()
         );
 
         controllerCategory.addEntry(
-                entryBuilder.startFloatField(Component.translatable("quadz.config.controller.expo"), Config.expo)
+                entryBuilder.startFloatField(Component.translatable(Config.rateProfile.expoKey()), Config.expo)
                         .setDefaultValue(Config.expo)
                         .setSaveConsumer(value -> Config.expo = value)
                         .build()
@@ -72,7 +90,7 @@ public interface MainConfigScreen {
         );
 
         visualsCategory.addEntry(
-                entryBuilder.startIntSlider(Component.translatable("quadz.config.visuals.stick_scale"), Math.round(Config.stickScale * 100), 50, 200)
+                entryBuilder.startIntSlider(Component.translatable("quadz.config.visuals.stick_scale"), Math.round(Config.stickScale * 100), 15, 200)
                         .setDefaultValue(100)
                         .setTextGetter(value -> Component.literal(value + "%"))
                         .setTooltip(Component.translatable("quadz.config.visuals.stick_scale.tooltip"))

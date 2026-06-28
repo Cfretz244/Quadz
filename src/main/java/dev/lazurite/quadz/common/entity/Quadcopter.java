@@ -11,8 +11,8 @@ import dev.lazurite.quadz.common.util.Bindable;
 import dev.lazurite.quadz.common.util.Search;
 import dev.lazurite.quadz.common.item.GogglesItem;
 import dev.lazurite.quadz.common.item.RemoteItem;
-import dev.lazurite.quadz.common.util.BetaflightHelper;
 import dev.lazurite.quadz.common.util.Matrix4fHelper;
+import dev.lazurite.quadz.common.util.RateProfile;
 import dev.lazurite.rayon.api.EntityPhysicsElement;
 import dev.lazurite.rayon.impl.bullet.collision.body.ElementRigidBody;
 import dev.lazurite.rayon.impl.bullet.collision.body.EntityRigidBody;
@@ -126,10 +126,16 @@ public class Quadcopter extends LivingEntity implements EntityPhysicsElement, Te
             var superRate = player.quadz$getJoystickValue(Identifier.fromNamespaceAndPath(Quadz.MODID, "super_rate"));
             var expo = player.quadz$getJoystickValue(Identifier.fromNamespaceAndPath(Quadz.MODID, "expo"));
 
+            // The selected rate system is synced as a joystick "axis" (its ordinal); guard the
+            // index in case it hasn't synced yet.
+            var profiles = RateProfile.values();
+            var profileIndex = Math.round(player.quadz$getJoystickValue(Identifier.fromNamespaceAndPath(Quadz.MODID, "rate_profile")));
+            var profile = profiles[Math.max(0, Math.min(profiles.length - 1, profileIndex))];
+
             this.rotate(
-                    (float) BetaflightHelper.calculateRates(pitch, rate, expo, superRate, 0.05f),
-                    (float) BetaflightHelper.calculateRates(yaw, rate, expo, superRate, 0.05f),
-                    (float) BetaflightHelper.calculateRates(roll, rate, expo, superRate, 0.05f)
+                    (float) profile.calculate(pitch, rate, superRate, expo, 0.05f),
+                    (float) profile.calculate(yaw, rate, superRate, expo, 0.05f),
+                    (float) profile.calculate(roll, rate, superRate, expo, 0.05f)
             );
 
             // Decrease angular velocity

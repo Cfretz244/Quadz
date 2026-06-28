@@ -5,6 +5,7 @@ import com.google.gson.JsonParser;
 import com.google.gson.JsonPrimitive;
 import dev.lazurite.quadz.Quadz;
 import dev.lazurite.quadz.client.render.screen.osd.VelocityUnit;
+import dev.lazurite.quadz.common.util.RateProfile;
 import net.fabricmc.loader.api.FabricLoader;
 
 import java.io.IOException;
@@ -27,6 +28,7 @@ public class Config {
     public static boolean throttleInverted = false;
     public static boolean throttleInCenter = false;
 
+    public static RateProfile rateProfile = RateProfile.BETAFLIGHT;
     public static float rate = 0.7f;
     public static float superRate = 0.8f;
     public static float expo = 0.0f;
@@ -61,6 +63,7 @@ public class Config {
         config.add("rollInverted", new JsonPrimitive(rollInverted));
         config.add("throttleInverted", new JsonPrimitive(throttleInverted));
         config.add("throttleInCenter", new JsonPrimitive(throttleInCenter));
+        config.add("rateProfile", new JsonPrimitive(rateProfile.name()));
         config.add("rate", new JsonPrimitive(rate));
         config.add("superRate", new JsonPrimitive(superRate));
         config.add("expo", new JsonPrimitive(expo));
@@ -104,6 +107,7 @@ public class Config {
             rollInverted = config.get("rollInverted").getAsBoolean();
             throttleInverted = config.get("throttleInverted").getAsBoolean();
             throttleInCenter = config.get("throttleInCenter").getAsBoolean();
+            if (config.has("rateProfile")) rateProfile = RateProfile.valueOf(config.get("rateProfile").getAsString());
             rate = config.get("rate").getAsFloat();
             superRate = config.get("superRate").getAsFloat();
             expo = config.get("expo").getAsFloat();

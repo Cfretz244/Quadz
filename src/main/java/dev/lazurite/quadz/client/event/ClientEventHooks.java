@@ -16,10 +16,24 @@ public class ClientEventHooks {
 
     public static void onPostLogin(Minecraft minecraft, ClientLevel level, LocalPlayer player) {
         if (player != null) {
-            player.quadz$setJoystickValue(Identifier.fromNamespaceAndPath(Quadz.MODID, "rate"), Config.rate);
-            player.quadz$setJoystickValue(Identifier.fromNamespaceAndPath(Quadz.MODID, "super_rate"), Config.superRate);
-            player.quadz$setJoystickValue(Identifier.fromNamespaceAndPath(Quadz.MODID, "expo"), Config.expo);
+            applyRateConfig(player);
         }
+    }
+
+    /**
+     * Pushes the rate-related config (profile + the three rate params) onto the player's synced
+     * joystick values. Called at login and after the config screen saves, so rate/profile changes
+     * take effect without relogging.
+     */
+    public static void applyRateConfig(LocalPlayer player) {
+        if (player == null) {
+            return;
+        }
+
+        player.quadz$setJoystickValue(Identifier.fromNamespaceAndPath(Quadz.MODID, "rate_profile"), Config.rateProfile.ordinal());
+        player.quadz$setJoystickValue(Identifier.fromNamespaceAndPath(Quadz.MODID, "rate"), Config.rate);
+        player.quadz$setJoystickValue(Identifier.fromNamespaceAndPath(Quadz.MODID, "super_rate"), Config.superRate);
+        player.quadz$setJoystickValue(Identifier.fromNamespaceAndPath(Quadz.MODID, "expo"), Config.expo);
     }
 
     public static void onClientTick(Minecraft minecraft) {
