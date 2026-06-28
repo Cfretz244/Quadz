@@ -40,6 +40,7 @@ public class Config {
     public static boolean osdEnabled = true;
     public static boolean speedDisplayEnabled = true;
     public static boolean stickDisplayEnabled = true;
+    public static boolean cameraAngleDisplayEnabled = true;
     public static float stickScale = 1.0f;
     public static VelocityUnit velocityUnit = VelocityUnit.METERS_PER_SECOND;
     public static boolean videoInterferenceEnabled = true;
@@ -75,6 +76,7 @@ public class Config {
         config.add("osdEnabled", new JsonPrimitive(osdEnabled));
         config.add("speedDisplayEnabled", new JsonPrimitive(speedDisplayEnabled));
         config.add("stickDisplayEnabled", new JsonPrimitive(stickDisplayEnabled));
+        config.add("cameraAngleDisplayEnabled", new JsonPrimitive(cameraAngleDisplayEnabled));
         config.add("stickScale", new JsonPrimitive(stickScale));
         config.add("velocityUnit", new JsonPrimitive(velocityUnit.toString()));
         config.add("videoInterferenceEnabled", new JsonPrimitive(videoInterferenceEnabled));
@@ -120,6 +122,7 @@ public class Config {
             // Guard newer keys so configs written by older versions still load.
             if (config.has("speedDisplayEnabled")) speedDisplayEnabled = config.get("speedDisplayEnabled").getAsBoolean();
             if (config.has("stickDisplayEnabled")) stickDisplayEnabled = config.get("stickDisplayEnabled").getAsBoolean();
+            if (config.has("cameraAngleDisplayEnabled")) cameraAngleDisplayEnabled = config.get("cameraAngleDisplayEnabled").getAsBoolean();
             if (config.has("stickScale")) stickScale = config.get("stickScale").getAsFloat();
             velocityUnit = VelocityUnit.valueOf(config.get("velocityUnit").getAsString());
             videoInterferenceEnabled = config.get("videoInterferenceEnabled").getAsBoolean();

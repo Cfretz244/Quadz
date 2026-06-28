@@ -13,8 +13,30 @@ import net.minecraft.resources.Identifier;
 
 public class OnScreenDisplay {
 
+    // When the camera-angle readout is toggled off it still flashes briefly while the angle is
+    // being adjusted, fading out over the tail of the window. Timer is in client ticks (20/sec).
+    private static final int FLASH_DURATION = 40;    // how long the readout stays up after a change
+    private static final int FLASH_FADE_TICKS = 12;  // how long it spends fading out at the end
+    private static int flashTicks = 0;
+
     private final Quadcopter quadcopter;
     private final Font font;
+
+    /** Show the camera-angle readout briefly (used when its toggle is off and the angle changes). */
+    public static void flashCameraAngle() {
+        flashTicks = FLASH_DURATION;
+    }
+
+    /** Decrement the flash timer; call once per client tick. */
+    public static void tickFlash() {
+        if (flashTicks > 0) {
+            flashTicks--;
+        }
+    }
+
+    public static boolean isCameraAngleFlashing() {
+        return flashTicks > 0;
+    }
 
     public OnScreenDisplay(Quadcopter quadcopter) {
         this.quadcopter = quadcopter;
@@ -34,8 +56,18 @@ public class OnScreenDisplay {
         var client = Minecraft.getInstance();
         var height = client.getWindow().getGuiScaledHeight() - 37;
         final var angle = quadcopter.getEntityData().get(Quadcopter.CAMERA_ANGLE);
-        final var text = Component.literal("Cam " + angle + "°");
-        guiGraphics.text(font, text, 25, height, 0xFFFFFFFF, true);
+        final var text = Component.literal(angle + "°");
+
+        // Full opacity when the readout is enabled; when it's only showing because of an
+        // adjustment flash, fade it out over the tail of the flash window.
+        final int alpha = Config.cameraAngleDisplayEnabled
+                ? 0xFF
+                : (int) (0xFF * Math.min(1.0f, flashTicks / (float) FLASH_FADE_TICKS));
+        if (alpha <= 0) {
+            return;
+        }
+
+        guiGraphics.text(font, text, 25, height, (alpha << 24) | 0xFFFFFF, true);
     }
 
     public void renderSticks(GuiGraphicsExtractor guiGraphics, float tickDelta) {

@@ -90,6 +90,14 @@ public interface MainConfigScreen {
         );
 
         visualsCategory.addEntry(
+                entryBuilder.startBooleanToggle(Component.translatable("quadz.config.visuals.camera_angle_display_toggle"), Config.cameraAngleDisplayEnabled)
+                        .setDefaultValue(Config.cameraAngleDisplayEnabled)
+                        .setTooltip(Component.translatable("quadz.config.visuals.camera_angle_display_toggle.tooltip"))
+                        .setSaveConsumer(value -> Config.cameraAngleDisplayEnabled = value)
+                        .build()
+        );
+
+        visualsCategory.addEntry(
                 entryBuilder.startIntSlider(Component.translatable("quadz.config.visuals.stick_scale"), Math.round(Config.stickScale * 100), 15, 200)
                         .setDefaultValue(100)
                         .setTextGetter(value -> Component.literal(value + "%"))

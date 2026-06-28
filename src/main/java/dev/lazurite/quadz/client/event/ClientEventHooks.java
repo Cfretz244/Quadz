@@ -5,6 +5,7 @@ import dev.lazurite.quadz.client.QuadzClient;
 import dev.lazurite.quadz.common.util.JoystickOutput;
 import dev.lazurite.quadz.client.Config;
 import dev.lazurite.quadz.client.render.screen.ControllerConnectedToast;
+import dev.lazurite.quadz.client.render.screen.osd.OnScreenDisplay;
 import dev.lazurite.toolbox.api.network.ClientNetworking;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.multiplayer.ClientLevel;
@@ -41,6 +42,9 @@ public class ClientEventHooks {
             return;
         }
 
+        // Advance the camera-angle readout's flash timer (used when its OSD toggle is off).
+        OnScreenDisplay.tickFlash();
+
         if (JoystickOutput.controllerExists()) {
             JoystickOutput.getAxisValue(minecraft.player, Config.pitch, Identifier.fromNamespaceAndPath(Quadz.MODID, "pitch"), Config.pitchInverted, false);
             JoystickOutput.getAxisValue(minecraft.player, Config.yaw, Identifier.fromNamespaceAndPath(Quadz.MODID, "yaw"), Config.yawInverted, false);
@@ -57,6 +61,8 @@ public class ClientEventHooks {
         if (delta != 0 && QuadzClient.getQuadcopterFromCamera().isPresent()) {
             final var sent = delta;
             ClientNetworking.send(Quadz.Networking.ADJUST_CAMERA_ANGLE, buf -> buf.writeInt(sent));
+            // Briefly surface the readout even when its toggle is off, so the pilot sees the value change.
+            OnScreenDisplay.flashCameraAngle();
         }
     }
 

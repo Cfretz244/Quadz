@@ -71,7 +71,9 @@ public class QuadcopterView extends View implements View.Ticking {
                 this.osd.renderSticks(guiGraphics, tickDelta);
             }
 
-            this.osd.renderCameraAngle(guiGraphics, tickDelta);
+            if (Config.cameraAngleDisplayEnabled || OnScreenDisplay.isCameraAngleFlashing()) {
+                this.osd.renderCameraAngle(guiGraphics, tickDelta);
+            }
         }
     }
 
