@@ -50,7 +50,33 @@ public interface MainConfigScreen {
         visualsCategory.addEntry(
                 entryBuilder.startBooleanToggle(Component.translatable("quadz.config.visuals.osd_toggle"), Config.osdEnabled)
                         .setDefaultValue(Config.osdEnabled)
+                        .setTooltip(Component.translatable("quadz.config.visuals.osd_toggle.tooltip"))
                         .setSaveConsumer(value -> Config.osdEnabled = value)
+                        .build()
+        );
+
+        visualsCategory.addEntry(
+                entryBuilder.startBooleanToggle(Component.translatable("quadz.config.visuals.speed_display_toggle"), Config.speedDisplayEnabled)
+                        .setDefaultValue(Config.speedDisplayEnabled)
+                        .setTooltip(Component.translatable("quadz.config.visuals.speed_display_toggle.tooltip"))
+                        .setSaveConsumer(value -> Config.speedDisplayEnabled = value)
+                        .build()
+        );
+
+        visualsCategory.addEntry(
+                entryBuilder.startBooleanToggle(Component.translatable("quadz.config.visuals.stick_display_toggle"), Config.stickDisplayEnabled)
+                        .setDefaultValue(Config.stickDisplayEnabled)
+                        .setTooltip(Component.translatable("quadz.config.visuals.stick_display_toggle.tooltip"))
+                        .setSaveConsumer(value -> Config.stickDisplayEnabled = value)
+                        .build()
+        );
+
+        visualsCategory.addEntry(
+                entryBuilder.startIntSlider(Component.translatable("quadz.config.visuals.stick_scale"), Math.round(Config.stickScale * 100), 50, 200)
+                        .setDefaultValue(100)
+                        .setTextGetter(value -> Component.literal(value + "%"))
+                        .setTooltip(Component.translatable("quadz.config.visuals.stick_scale.tooltip"))
+                        .setSaveConsumer(value -> Config.stickScale = value * 0.01f)
                         .build()
         );
 

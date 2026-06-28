@@ -38,7 +38,9 @@ public class OnScreenDisplay {
             var throttle = (player.quadz$getJoystickValue(Identifier.fromNamespaceAndPath(Quadz.MODID, "throttle")) + 1.0f);
             var width = Minecraft.getInstance().getWindow().getGuiScaledWidth();
             var height = Minecraft.getInstance().getWindow().getGuiScaledHeight();
-            renderSticks(guiGraphics, tickDelta, width / 2, height - 75, 25, 5, pitch, yaw, roll, throttle);
+            var scale = Math.max(1, Math.round(25 * Config.stickScale));
+            var spacing = Math.max(1, Math.round(5 * Config.stickScale));
+            renderSticks(guiGraphics, tickDelta, width / 2, height - 75, scale, spacing, pitch, yaw, roll, throttle);
         });
     }
 
