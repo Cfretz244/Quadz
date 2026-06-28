@@ -70,10 +70,13 @@ public class QuadcopterView extends View implements View.Ticking {
             if (Config.stickDisplayEnabled) {
                 this.osd.renderSticks(guiGraphics, tickDelta);
             }
+        }
 
-            if (Config.cameraAngleDisplayEnabled || OnScreenDisplay.isCameraAngleFlashing()) {
-                this.osd.renderCameraAngle(guiGraphics, tickDelta);
-            }
+        // Camera-angle readout: shows persistently when enabled (and the master OSD is on), and
+        // ALSO flashes briefly while the angle is being adjusted — independent of the master OSD,
+        // so the value is always visible the moment you change it.
+        if ((Config.osdEnabled && Config.cameraAngleDisplayEnabled) || OnScreenDisplay.isCameraAngleFlashing()) {
+            this.osd.renderCameraAngle(guiGraphics, tickDelta);
         }
     }
 

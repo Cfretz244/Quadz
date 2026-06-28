@@ -58,9 +58,11 @@ public class OnScreenDisplay {
         final var angle = quadcopter.getEntityData().get(Quadcopter.CAMERA_ANGLE);
         final var text = Component.literal(angle + "°");
 
-        // Full opacity when the readout is enabled; when it's only showing because of an
-        // adjustment flash, fade it out over the tail of the flash window.
-        final int alpha = Config.cameraAngleDisplayEnabled
+        // Full opacity when the readout is showing persistently (master OSD on + its toggle on);
+        // otherwise it's only up because of an adjustment flash, so fade it out over the tail of
+        // the flash window. The flash is intentionally independent of the master OSD switch.
+        final boolean persistent = Config.osdEnabled && Config.cameraAngleDisplayEnabled;
+        final int alpha = persistent
                 ? 0xFF
                 : (int) (0xFF * Math.min(1.0f, flashTicks / (float) FLASH_FADE_TICKS));
         if (alpha <= 0) {
