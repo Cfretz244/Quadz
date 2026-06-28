@@ -39,14 +39,22 @@ public class OnScreenDisplay {
             var width = Minecraft.getInstance().getWindow().getGuiScaledWidth();
             var height = Minecraft.getInstance().getWindow().getGuiScaledHeight();
             var scale = Math.max(1, Math.round(25 * Config.stickScale));
-            var spacing = Math.max(1, Math.round(5 * Config.stickScale));
-            renderSticks(guiGraphics, tickDelta, width / 2, height - 75, scale, spacing, pitch, yaw, roll, throttle);
+            // Fixed gimbal separation and bottom margin so the two sticks stay spread out and
+            // low on the screen regardless of size (instead of clustering toward the centre).
+            var offset = 60;
+            var bottomMargin = 60;
+            renderSticks(guiGraphics, tickDelta, width / 2, height - bottomMargin, scale, offset, pitch, yaw, roll, throttle);
         });
     }
 
-    public static void renderSticks(GuiGraphicsExtractor guiGraphics, float tickDelta, int x, int y, int scale, int spacing, float pitch, float yaw, float roll, float throttle) {
-        var leftX = x - scale - spacing;
-        var rightX = x + scale + spacing;
+    /**
+     * @param offset half the horizontal distance between the two stick gimbals (distance of each
+     *               gimbal's centre from {@code x}). Kept independent of {@code scale} so the two
+     *               sticks stay a fixed distance apart regardless of gimbal size.
+     */
+    public static void renderSticks(GuiGraphicsExtractor guiGraphics, float tickDelta, int x, int y, int scale, int offset, float pitch, float yaw, float roll, float throttle) {
+        var leftX = x - offset;
+        var rightX = x + offset;
         var topY = y + scale;
         var bottomY = y - scale;
 

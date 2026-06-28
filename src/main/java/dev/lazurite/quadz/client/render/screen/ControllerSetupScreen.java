@@ -181,7 +181,7 @@ public class ControllerSetupScreen extends Screen {
         var yaw = JoystickOutput.getAxisValue(null, Config.yaw, this.yawLocation, Config.yawInverted, false);
         var roll = JoystickOutput.getAxisValue(null, Config.roll, this.rollLocation, Config.rollInverted, false);
         var throttle = JoystickOutput.getAxisValue(null, Config.throttle, this.throttleLocation, Config.throttleInverted, Config.throttleInCenter) + 1.0f;
-        OnScreenDisplay.renderSticks(guiGraphics, f, width / 2, height / 2 + 20, 40, 10, pitch, yaw, roll, throttle);
+        OnScreenDisplay.renderSticks(guiGraphics, f, width / 2, height / 2 + 20, 40, 50, pitch, yaw, roll, throttle);
 
         // An axis has been selected. Time to listen...
         if (this.axisConsumer != null) {
