@@ -41,10 +41,25 @@ public class Config {
     public static final float[] superRates = DEFAULT_SUPER_RATES.clone();
     public static final float[] expos      = DEFAULT_EXPOS.clone();
 
-    /** The active profile's rate parameter (what flight/sync should use). */
+    /** The active profile's rate parameter (used when axes are linked). */
     public static float rate()      { return rates[rateProfile.ordinal()]; }
     public static float superRate() { return superRates[rateProfile.ordinal()]; }
     public static float expo()      { return expos[rateProfile.ordinal()]; }
+
+    // Per-axis rates. When linkAxes is true (default) pitch/yaw/roll all use the shared values
+    // above; when false, each axis uses its own values below. Per-axis arrays are indexed by
+    // RateProfile.ordinal() too (so per-axis tuning is still per-profile), and default to the same
+    // per-profile defaults so unlinking starts neutral.
+    public static boolean linkAxes = true;
+    public static final float[] pitchRates      = DEFAULT_RATES.clone();
+    public static final float[] pitchSuperRates = DEFAULT_SUPER_RATES.clone();
+    public static final float[] pitchExpos      = DEFAULT_EXPOS.clone();
+    public static final float[] yawRates        = DEFAULT_RATES.clone();
+    public static final float[] yawSuperRates   = DEFAULT_SUPER_RATES.clone();
+    public static final float[] yawExpos        = DEFAULT_EXPOS.clone();
+    public static final float[] rollRates       = DEFAULT_RATES.clone();
+    public static final float[] rollSuperRates  = DEFAULT_SUPER_RATES.clone();
+    public static final float[] rollExpos       = DEFAULT_EXPOS.clone();
 
     public static float deadzone = 0.05f;
     public static boolean followLOS = true;
@@ -81,6 +96,16 @@ public class Config {
         config.add("rates", floatArrayToJson(rates));
         config.add("superRates", floatArrayToJson(superRates));
         config.add("expos", floatArrayToJson(expos));
+        config.add("linkAxes", new JsonPrimitive(linkAxes));
+        config.add("pitchRates", floatArrayToJson(pitchRates));
+        config.add("pitchSuperRates", floatArrayToJson(pitchSuperRates));
+        config.add("pitchExpos", floatArrayToJson(pitchExpos));
+        config.add("yawRates", floatArrayToJson(yawRates));
+        config.add("yawSuperRates", floatArrayToJson(yawSuperRates));
+        config.add("yawExpos", floatArrayToJson(yawExpos));
+        config.add("rollRates", floatArrayToJson(rollRates));
+        config.add("rollSuperRates", floatArrayToJson(rollSuperRates));
+        config.add("rollExpos", floatArrayToJson(rollExpos));
         config.add("controllerId", new JsonPrimitive(controllerId));
         config.add("deadzone", new JsonPrimitive(deadzone));
         config.add("followLOS", new JsonPrimitive(followLOS));
@@ -123,6 +148,17 @@ public class Config {
             throttleInverted = config.get("throttleInverted").getAsBoolean();
             throttleInCenter = config.get("throttleInCenter").getAsBoolean();
             if (config.has("rateProfile")) rateProfile = RateProfile.valueOf(config.get("rateProfile").getAsString());
+            if (config.has("linkAxes")) linkAxes = config.get("linkAxes").getAsBoolean();
+            // readFloatArray no-ops on absent keys, so older configs just keep the defaults.
+            readFloatArray(config, "pitchRates", pitchRates);
+            readFloatArray(config, "pitchSuperRates", pitchSuperRates);
+            readFloatArray(config, "pitchExpos", pitchExpos);
+            readFloatArray(config, "yawRates", yawRates);
+            readFloatArray(config, "yawSuperRates", yawSuperRates);
+            readFloatArray(config, "yawExpos", yawExpos);
+            readFloatArray(config, "rollRates", rollRates);
+            readFloatArray(config, "rollSuperRates", rollSuperRates);
+            readFloatArray(config, "rollExpos", rollExpos);
             if (config.has("rates")) {
                 readFloatArray(config, "rates", rates);
                 readFloatArray(config, "superRates", superRates);

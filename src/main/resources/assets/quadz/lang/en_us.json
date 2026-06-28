@@ -32,6 +32,11 @@
   "quadz.config.controller.kiss.rate" : "RC Rate",
   "quadz.config.controller.kiss.super_rate" : "Rate",
   "quadz.config.controller.kiss.expo" : "RC Curve",
+  "quadz.config.controller.link_axes" : "Link Axes",
+  "quadz.config.controller.link_axes.tooltip" : "On: one rate set controls pitch, yaw and roll together. Off: each axis gets its own rate / super-rate / expo (still per profile).",
+  "quadz.config.controller.axis.pitch" : "Pitch",
+  "quadz.config.controller.axis.yaw" : "Yaw",
+  "quadz.config.controller.axis.roll" : "Roll",
 
   "quadz.config.visuals.title" : "Visuals",
   "quadz.config.visuals.static_toggle" : "Video Interference",

@@ -122,9 +122,17 @@ public class Quadcopter extends LivingEntity implements EntityPhysicsElement, Te
             var roll = player.quadz$getJoystickValue(Identifier.fromNamespaceAndPath(Quadz.MODID, "roll"));
             var throttle = player.quadz$getJoystickValue(Identifier.fromNamespaceAndPath(Quadz.MODID, "throttle")) + 1.0f;
 
-            var rate = player.quadz$getJoystickValue(Identifier.fromNamespaceAndPath(Quadz.MODID, "rate"));
-            var superRate = player.quadz$getJoystickValue(Identifier.fromNamespaceAndPath(Quadz.MODID, "super_rate"));
-            var expo = player.quadz$getJoystickValue(Identifier.fromNamespaceAndPath(Quadz.MODID, "expo"));
+            // Per-axis rate params. The client resolves link-vs-per-axis and pushes these, so here
+            // we just read each axis's own keys (linked simply means all three carry equal values).
+            var pitchRate = player.quadz$getJoystickValue(Identifier.fromNamespaceAndPath(Quadz.MODID, "pitch_rate"));
+            var pitchSuperRate = player.quadz$getJoystickValue(Identifier.fromNamespaceAndPath(Quadz.MODID, "pitch_super_rate"));
+            var pitchExpo = player.quadz$getJoystickValue(Identifier.fromNamespaceAndPath(Quadz.MODID, "pitch_expo"));
+            var yawRate = player.quadz$getJoystickValue(Identifier.fromNamespaceAndPath(Quadz.MODID, "yaw_rate"));
+            var yawSuperRate = player.quadz$getJoystickValue(Identifier.fromNamespaceAndPath(Quadz.MODID, "yaw_super_rate"));
+            var yawExpo = player.quadz$getJoystickValue(Identifier.fromNamespaceAndPath(Quadz.MODID, "yaw_expo"));
+            var rollRate = player.quadz$getJoystickValue(Identifier.fromNamespaceAndPath(Quadz.MODID, "roll_rate"));
+            var rollSuperRate = player.quadz$getJoystickValue(Identifier.fromNamespaceAndPath(Quadz.MODID, "roll_super_rate"));
+            var rollExpo = player.quadz$getJoystickValue(Identifier.fromNamespaceAndPath(Quadz.MODID, "roll_expo"));
 
             // The selected rate system is synced as a joystick "axis" (its ordinal); guard the
             // index in case it hasn't synced yet.
@@ -133,9 +141,9 @@ public class Quadcopter extends LivingEntity implements EntityPhysicsElement, Te
             var profile = profiles[Math.max(0, Math.min(profiles.length - 1, profileIndex))];
 
             this.rotate(
-                    (float) profile.calculate(pitch, rate, superRate, expo, 0.05f),
-                    (float) profile.calculate(yaw, rate, superRate, expo, 0.05f),
-                    (float) profile.calculate(roll, rate, superRate, expo, 0.05f)
+                    (float) profile.calculate(pitch, pitchRate, pitchSuperRate, pitchExpo, 0.05f),
+                    (float) profile.calculate(yaw, yawRate, yawSuperRate, yawExpo, 0.05f),
+                    (float) profile.calculate(roll, rollRate, rollSuperRate, rollExpo, 0.05f)
             );
 
             // Decrease angular velocity

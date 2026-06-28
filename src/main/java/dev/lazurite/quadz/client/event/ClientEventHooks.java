@@ -22,19 +22,39 @@ public class ClientEventHooks {
     }
 
     /**
-     * Pushes the rate-related config (profile + the three rate params) onto the player's synced
+     * Pushes the rate-related config (profile + per-axis rate params) onto the player's synced
      * joystick values. Called at login and after the config screen saves, so rate/profile changes
-     * take effect without relogging.
+     * take effect without relogging. The link-vs-per-axis decision is resolved here (client side):
+     * when axes are linked, all three axes get the active profile's shared values; when unlinked,
+     * each axis gets its own. The server tick then just reads per-axis keys, staying agnostic.
      */
     public static void applyRateConfig(LocalPlayer player) {
         if (player == null) {
             return;
         }
 
-        player.quadz$setJoystickValue(Identifier.fromNamespaceAndPath(Quadz.MODID, "rate_profile"), Config.rateProfile.ordinal());
-        player.quadz$setJoystickValue(Identifier.fromNamespaceAndPath(Quadz.MODID, "rate"), Config.rate());
-        player.quadz$setJoystickValue(Identifier.fromNamespaceAndPath(Quadz.MODID, "super_rate"), Config.superRate());
-        player.quadz$setJoystickValue(Identifier.fromNamespaceAndPath(Quadz.MODID, "expo"), Config.expo());
+        final var p = Config.rateProfile.ordinal();
+        player.quadz$setJoystickValue(rateId("rate_profile"), Config.rateProfile.ordinal());
+
+        if (Config.linkAxes) {
+            applyAxisRates(player, "pitch", Config.rates[p], Config.superRates[p], Config.expos[p]);
+            applyAxisRates(player, "yaw",   Config.rates[p], Config.superRates[p], Config.expos[p]);
+            applyAxisRates(player, "roll",  Config.rates[p], Config.superRates[p], Config.expos[p]);
+        } else {
+            applyAxisRates(player, "pitch", Config.pitchRates[p], Config.pitchSuperRates[p], Config.pitchExpos[p]);
+            applyAxisRates(player, "yaw",   Config.yawRates[p],   Config.yawSuperRates[p],   Config.yawExpos[p]);
+            applyAxisRates(player, "roll",  Config.rollRates[p],  Config.rollSuperRates[p],  Config.rollExpos[p]);
+        }
+    }
+
+    private static void applyAxisRates(LocalPlayer player, String axis, float rate, float superRate, float expo) {
+        player.quadz$setJoystickValue(rateId(axis + "_rate"), rate);
+        player.quadz$setJoystickValue(rateId(axis + "_super_rate"), superRate);
+        player.quadz$setJoystickValue(rateId(axis + "_expo"), expo);
+    }
+
+    private static Identifier rateId(String path) {
+        return Identifier.fromNamespaceAndPath(Quadz.MODID, path);
     }
 
     public static void onClientTick(Minecraft minecraft) {

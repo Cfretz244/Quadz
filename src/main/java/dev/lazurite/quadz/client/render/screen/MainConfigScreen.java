@@ -5,6 +5,8 @@ import dev.lazurite.quadz.client.event.ClientEventHooks;
 import dev.lazurite.quadz.client.render.screen.osd.VelocityUnit;
 import dev.lazurite.quadz.common.util.RateProfile;
 import me.shedaniel.clothconfig2.api.ConfigBuilder;
+import me.shedaniel.clothconfig2.api.ConfigCategory;
+import me.shedaniel.clothconfig2.api.ConfigEntryBuilder;
 import me.shedaniel.clothconfig2.api.Requirement;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.screens.Screen;
@@ -26,10 +28,9 @@ public interface MainConfigScreen {
         var controllerCategory = builder.getOrCreateCategory(Component.translatable("quadz.config.controller.title"));
         var visualsCategory = builder.getOrCreateCategory(Component.translatable("quadz.config.visuals.title"));
 
-        // Rate profile selector + per-profile rate fields. All three profiles' field sets are added,
-        // but each field is shown only when its profile is selected (cloth display requirement keyed
-        // off the selector). So picking a profile instantly swaps both the field labels (RC Rate vs
-        // Center Sensitivity, etc.) and the values — and each profile remembers its own numbers.
+        // Rate profile selector + per-profile rate fields. Every profile's field set is added but
+        // gated by a cloth display requirement keyed off the selector (and the Link Axes toggle
+        // below), so the visible fields — labels and values — swap instantly when you change either.
         final var profileEntry =
                 entryBuilder.startEnumSelector(Component.translatable("quadz.config.controller.rate_profile"), RateProfile.class, Config.rateProfile)
                         .setEnumNameProvider(profile -> ((RateProfile) profile).getTranslation())
@@ -41,32 +42,36 @@ public interface MainConfigScreen {
                         .build();
         controllerCategory.addEntry(profileEntry);
 
+        // Link Axes: on = one shared rate set drives pitch/yaw/roll; off = independent per-axis rates.
+        final var linkEntry =
+                entryBuilder.startBooleanToggle(Component.translatable("quadz.config.controller.link_axes"), Config.linkAxes)
+                        .setDefaultValue(true)
+                        .setTooltip(Component.translatable("quadz.config.controller.link_axes.tooltip"))
+                        .setSaveConsumer(value -> Config.linkAxes = value)
+                        .build();
+        controllerCategory.addEntry(linkEntry);
+
         for (RateProfile profile : RateProfile.values()) {
             final int i = profile.ordinal();
+            final var thisProfile = Requirement.isValue(profileEntry, profile);
+            final var linked = Requirement.all(thisProfile, Requirement.isTrue(linkEntry));
+            final var unlinked = Requirement.all(thisProfile, Requirement.isFalse(linkEntry));
 
-            controllerCategory.addEntry(
-                    entryBuilder.startFloatField(Component.translatable(profile.rateKey()), Config.rates[i])
-                            .setDefaultValue(Config.DEFAULT_RATES[i])
-                            .setDisplayRequirement(Requirement.isValue(profileEntry, profile))
-                            .setSaveConsumer(value -> Config.rates[i] = value)
-                            .build()
-            );
+            // Linked: one shared set per profile.
+            addRateField(controllerCategory, entryBuilder, Component.translatable(profile.rateKey()),      Config.rates,      Config.DEFAULT_RATES,      i, linked);
+            addRateField(controllerCategory, entryBuilder, Component.translatable(profile.superRateKey()), Config.superRates, Config.DEFAULT_SUPER_RATES, i, linked);
+            addRateField(controllerCategory, entryBuilder, Component.translatable(profile.expoKey()),      Config.expos,      Config.DEFAULT_EXPOS,      i, linked);
 
-            controllerCategory.addEntry(
-                    entryBuilder.startFloatField(Component.translatable(profile.superRateKey()), Config.superRates[i])
-                            .setDefaultValue(Config.DEFAULT_SUPER_RATES[i])
-                            .setDisplayRequirement(Requirement.isValue(profileEntry, profile))
-                            .setSaveConsumer(value -> Config.superRates[i] = value)
-                            .build()
-            );
-
-            controllerCategory.addEntry(
-                    entryBuilder.startFloatField(Component.translatable(profile.expoKey()), Config.expos[i])
-                            .setDefaultValue(Config.DEFAULT_EXPOS[i])
-                            .setDisplayRequirement(Requirement.isValue(profileEntry, profile))
-                            .setSaveConsumer(value -> Config.expos[i] = value)
-                            .build()
-            );
+            // Unlinked: independent pitch / yaw / roll sets, each labelled "<Axis> <field name>".
+            addRateField(controllerCategory, entryBuilder, axisLabel("pitch", profile.rateKey()),      Config.pitchRates,      Config.DEFAULT_RATES,      i, unlinked);
+            addRateField(controllerCategory, entryBuilder, axisLabel("pitch", profile.superRateKey()), Config.pitchSuperRates, Config.DEFAULT_SUPER_RATES, i, unlinked);
+            addRateField(controllerCategory, entryBuilder, axisLabel("pitch", profile.expoKey()),      Config.pitchExpos,      Config.DEFAULT_EXPOS,      i, unlinked);
+            addRateField(controllerCategory, entryBuilder, axisLabel("yaw",   profile.rateKey()),      Config.yawRates,        Config.DEFAULT_RATES,      i, unlinked);
+            addRateField(controllerCategory, entryBuilder, axisLabel("yaw",   profile.superRateKey()), Config.yawSuperRates,   Config.DEFAULT_SUPER_RATES, i, unlinked);
+            addRateField(controllerCategory, entryBuilder, axisLabel("yaw",   profile.expoKey()),      Config.yawExpos,        Config.DEFAULT_EXPOS,      i, unlinked);
+            addRateField(controllerCategory, entryBuilder, axisLabel("roll",  profile.rateKey()),      Config.rollRates,       Config.DEFAULT_RATES,      i, unlinked);
+            addRateField(controllerCategory, entryBuilder, axisLabel("roll",  profile.superRateKey()), Config.rollSuperRates,  Config.DEFAULT_SUPER_RATES, i, unlinked);
+            addRateField(controllerCategory, entryBuilder, axisLabel("roll",  profile.expoKey()),      Config.rollExpos,       Config.DEFAULT_EXPOS,      i, unlinked);
         }
 
         controllerCategory.addEntry(
@@ -169,6 +174,24 @@ public interface MainConfigScreen {
 
         builder.setGlobalized(true);
         return builder.build();
+    }
+
+    /** Adds one float rate field bound to {@code store[i]}, shown only when {@code displayRequirement} holds. */
+    private static void addRateField(ConfigCategory category, ConfigEntryBuilder entryBuilder, Component label, float[] store, float[] defaults, int i, Requirement displayRequirement) {
+        category.addEntry(
+                entryBuilder.startFloatField(label, store[i])
+                        .setDefaultValue(defaults[i])
+                        .setDisplayRequirement(displayRequirement)
+                        .setSaveConsumer(value -> store[i] = value)
+                        .build()
+        );
+    }
+
+    /** "<Axis> <field name>", e.g. "Pitch RC Rate" — axis prefix joined to the profile's field label. */
+    private static Component axisLabel(String axisKey, String fieldKey) {
+        return Component.translatable("quadz.config.controller.axis." + axisKey)
+                .append(" ")
+                .append(Component.translatable(fieldKey));
     }
 
 }
