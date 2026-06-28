@@ -66,5 +66,9 @@
 
   "quadz.velocity.meters_per_second" : "Meters per Second",
   "quadz.velocity.miles_per_hour" : "Miles per Hour",
-  "quadz.velocity.kilometers_per_hour" : "Kilometers per Hour"
+  "quadz.velocity.kilometers_per_hour" : "Kilometers per Hour",
+
+  "key.category.quadz.quadz" : "Quadz",
+  "quadz.key.camera_up" : "Increase Camera Uptilt (FPV)",
+  "quadz.key.camera_down" : "Decrease Camera Uptilt (FPV)"
 }

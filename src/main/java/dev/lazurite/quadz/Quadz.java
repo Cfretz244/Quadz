@@ -70,6 +70,7 @@ public class Quadz implements ModInitializer {
         PacketRegistry.registerServerbound(Networking.JOYSTICK_INPUT, ServerNetworkEventHooks::onJoystickInput);
         PacketRegistry.registerServerbound(Networking.REQUEST_QUADCOPTER_VIEW, ServerNetworkEventHooks::onQuadcopterViewRequested);
         PacketRegistry.registerServerbound(Networking.REQUEST_PLAYER_VIEW, ServerNetworkEventHooks::onPlayerViewRequestReceived);
+        PacketRegistry.registerServerbound(Networking.ADJUST_CAMERA_ANGLE, ServerNetworkEventHooks::onAdjustCameraAngle);
 
         // Load templates
         TemplateLoader.initialize(MODID);
@@ -80,6 +81,7 @@ public class Quadz implements ModInitializer {
         public static final Identifier JOYSTICK_INPUT = Identifier.fromNamespaceAndPath(MODID, "joystick_input");
         public static final Identifier REQUEST_QUADCOPTER_VIEW = Identifier.fromNamespaceAndPath(MODID, "request_quadcopter_view");
         public static final Identifier REQUEST_PLAYER_VIEW = Identifier.fromNamespaceAndPath(MODID, "request_player_view");
+        public static final Identifier ADJUST_CAMERA_ANGLE = Identifier.fromNamespaceAndPath(MODID, "adjust_camera_angle");
 
     }
 

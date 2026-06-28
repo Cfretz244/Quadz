@@ -30,6 +30,14 @@ public class OnScreenDisplay {
         guiGraphics.text(font, velocity, 25, height, 0xFFFFFFFF, true);
     }
 
+    public void renderCameraAngle(GuiGraphicsExtractor guiGraphics, float tickDelta) {
+        var client = Minecraft.getInstance();
+        var height = client.getWindow().getGuiScaledHeight() - 37;
+        final var angle = quadcopter.getEntityData().get(Quadcopter.CAMERA_ANGLE);
+        final var text = Component.literal("Cam " + angle + "°");
+        guiGraphics.text(font, text, 25, height, 0xFFFFFFFF, true);
+    }
+
     public void renderSticks(GuiGraphicsExtractor guiGraphics, float tickDelta) {
         Search.forPlayer(quadcopter).ifPresent(player -> {
             var pitch = player.quadz$getJoystickValue(Identifier.fromNamespaceAndPath(Quadz.MODID, "pitch"));

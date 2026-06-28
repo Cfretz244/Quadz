@@ -16,17 +16,28 @@ import dev.lazurite.quadz.client.resource.SplashResourceLoader;
 import dev.lazurite.quadz.common.entity.Quadcopter;
 import dev.lazurite.toolbox.api.event.ClientEvents;
 import dev.lazurite.toolbox.api.network.PacketRegistry;
+import com.mojang.blaze3d.platform.InputConstants;
 import net.fabricmc.api.ClientModInitializer;
+import net.fabricmc.fabric.api.client.keymapping.v1.KeyMappingHelper;
 import net.fabricmc.fabric.api.client.rendering.v1.EntityRendererRegistry;
 import net.fabricmc.fabric.api.client.rendering.v1.hud.HudElementRegistry;
 import net.fabricmc.fabric.api.resource.ResourceManagerHelper;
+import net.minecraft.client.KeyMapping;
 import net.minecraft.client.Minecraft;
 import net.minecraft.resources.Identifier;
 import net.minecraft.server.packs.PackType;
+import org.lwjgl.glfw.GLFW;
 
 import java.util.Optional;
 
 public class QuadzClient implements ClientModInitializer {
+
+    // Adjust the viewed drone's camera uptilt while in FPV (rebindable; default arrow keys).
+    private static final KeyMapping.Category KEY_CATEGORY = KeyMapping.Category.register(Identifier.fromNamespaceAndPath(Quadz.MODID, "quadz"));
+    public static final KeyMapping CAMERA_UP = new KeyMapping(
+            "quadz.key.camera_up", InputConstants.Type.KEYSYM, GLFW.GLFW_KEY_UP, KEY_CATEGORY);
+    public static final KeyMapping CAMERA_DOWN = new KeyMapping(
+            "quadz.key.camera_down", InputConstants.Type.KEYSYM, GLFW.GLFW_KEY_DOWN, KEY_CATEGORY);
 
     /**
      * Finds the player's quadcopter based on its camera view.
@@ -56,6 +67,10 @@ public class QuadzClient implements ClientModInitializer {
     @Override
     public void onInitializeClient() {
         Config.load();
+
+        // Keybinds
+        KeyMappingHelper.registerKeyMapping(CAMERA_UP);
+        KeyMappingHelper.registerKeyMapping(CAMERA_DOWN);
 
         // Renderer
         EntityRendererRegistry.register(Quadz.QUADCOPTER, QuadcopterEntityRenderer::new);

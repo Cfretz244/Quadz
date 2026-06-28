@@ -37,11 +37,26 @@ public class ClientEventHooks {
     }
 
     public static void onClientTick(Minecraft minecraft) {
-        if (!minecraft.isPaused() && minecraft.player != null && JoystickOutput.controllerExists()) {
+        if (minecraft.isPaused() || minecraft.player == null) {
+            return;
+        }
+
+        if (JoystickOutput.controllerExists()) {
             JoystickOutput.getAxisValue(minecraft.player, Config.pitch, Identifier.fromNamespaceAndPath(Quadz.MODID, "pitch"), Config.pitchInverted, false);
             JoystickOutput.getAxisValue(minecraft.player, Config.yaw, Identifier.fromNamespaceAndPath(Quadz.MODID, "yaw"), Config.yawInverted, false);
             JoystickOutput.getAxisValue(minecraft.player, Config.roll, Identifier.fromNamespaceAndPath(Quadz.MODID, "roll"), Config.rollInverted, false);
             JoystickOutput.getAxisValue(minecraft.player, Config.throttle, Identifier.fromNamespaceAndPath(Quadz.MODID, "throttle"), Config.throttleInverted, Config.throttleInCenter);
+        }
+
+        // Camera uptilt: drain the keybind queue (so presses don't pile up) and, when viewing a
+        // drone, ask the server to nudge that drone's uptilt by 1 degree per press.
+        var delta = 0;
+        while (QuadzClient.CAMERA_UP.consumeClick()) delta += 1;
+        while (QuadzClient.CAMERA_DOWN.consumeClick()) delta -= 1;
+
+        if (delta != 0 && QuadzClient.getQuadcopterFromCamera().isPresent()) {
+            final var sent = delta;
+            ClientNetworking.send(Quadz.Networking.ADJUST_CAMERA_ANGLE, buf -> buf.writeInt(sent));
         }
     }
 

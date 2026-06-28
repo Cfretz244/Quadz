@@ -62,4 +62,22 @@ public class ServerNetworkEventHooks {
         Optional.ofNullable(player.level().getServer()).ifPresent(server -> server.execute(() -> player.setCamera(player)));
     }
 
+    /**
+     * Nudges the camera uptilt of the quadcopter the player is currently viewing by the given
+     * delta (degrees), clamped to 0–90. Stored in synced entity data so it persists with the
+     * drone and any spectators see the same view.
+     */
+    public static void onAdjustCameraAngle(PacketRegistry.ServerboundContext context) {
+        var player = context.player();
+        var delta = context.byteBuf().readInt();
+
+        Optional.ofNullable(player.level().getServer()).ifPresent(server -> server.execute(() -> {
+            if (player.getCamera() instanceof Quadcopter quadcopter) {
+                var current = quadcopter.getEntityData().get(Quadcopter.CAMERA_ANGLE);
+                var updated = Math.max(0, Math.min(90, current + delta));
+                quadcopter.getEntityData().set(Quadcopter.CAMERA_ANGLE, updated);
+            }
+        }));
+    }
+
 }
