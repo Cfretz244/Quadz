@@ -5,6 +5,7 @@ import dev.lazurite.quadz.client.event.ClientEventHooks;
 import dev.lazurite.quadz.client.render.screen.osd.VelocityUnit;
 import dev.lazurite.quadz.common.util.RateProfile;
 import me.shedaniel.clothconfig2.api.ConfigBuilder;
+import me.shedaniel.clothconfig2.api.Requirement;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.components.Button;
 import net.minecraft.client.gui.screens.Screen;
@@ -26,37 +27,46 @@ public interface MainConfigScreen {
         var controllerCategory = builder.getOrCreateCategory(Component.translatable("quadz.config.controller.title"));
         var visualsCategory = builder.getOrCreateCategory(Component.translatable("quadz.config.visuals.title"));
 
-        // The three rate fields below are labelled to match the selected profile's terminology.
-        // (v1: labels update when the screen is reopened after switching profiles.)
-        controllerCategory.addEntry(
+        // Rate profile selector + per-profile rate fields. All three profiles' field sets are added,
+        // but each field is shown only when its profile is selected (cloth display requirement keyed
+        // off the selector). So picking a profile instantly swaps both the field labels (RC Rate vs
+        // Center Sensitivity, etc.) and the values — and each profile remembers its own numbers.
+        final var profileEntry =
                 entryBuilder.startEnumSelector(Component.translatable("quadz.config.controller.rate_profile"), RateProfile.class, Config.rateProfile)
                         .setEnumNameProvider(profile -> ((RateProfile) profile).getTranslation())
                         .setTooltip(Component.translatable("quadz.config.controller.rate_profile.tooltip"))
-                        .setDefaultValue(Config.rateProfile)
+                        .setDefaultValue(RateProfile.BETAFLIGHT)
                         .setSaveConsumer(value -> Config.rateProfile = value)
-                        .build()
-        );
+                        .build();
+        controllerCategory.addEntry(profileEntry);
 
-        controllerCategory.addEntry(
-                entryBuilder.startFloatField(Component.translatable(Config.rateProfile.rateKey()), Config.rate)
-                        .setDefaultValue(Config.rate)
-                        .setSaveConsumer(value -> Config.rate = value)
-                        .build()
-        );
+        for (RateProfile profile : RateProfile.values()) {
+            final int i = profile.ordinal();
 
-        controllerCategory.addEntry(
-                entryBuilder.startFloatField(Component.translatable(Config.rateProfile.superRateKey()), Config.superRate)
-                        .setDefaultValue(Config.superRate)
-                        .setSaveConsumer(value -> Config.superRate = value)
-                        .build()
-        );
+            controllerCategory.addEntry(
+                    entryBuilder.startFloatField(Component.translatable(profile.rateKey()), Config.rates[i])
+                            .setDefaultValue(Config.DEFAULT_RATES[i])
+                            .setDisplayRequirement(Requirement.isValue(profileEntry, profile))
+                            .setSaveConsumer(value -> Config.rates[i] = value)
+                            .build()
+            );
 
-        controllerCategory.addEntry(
-                entryBuilder.startFloatField(Component.translatable(Config.rateProfile.expoKey()), Config.expo)
-                        .setDefaultValue(Config.expo)
-                        .setSaveConsumer(value -> Config.expo = value)
-                        .build()
-        );
+            controllerCategory.addEntry(
+                    entryBuilder.startFloatField(Component.translatable(profile.superRateKey()), Config.superRates[i])
+                            .setDefaultValue(Config.DEFAULT_SUPER_RATES[i])
+                            .setDisplayRequirement(Requirement.isValue(profileEntry, profile))
+                            .setSaveConsumer(value -> Config.superRates[i] = value)
+                            .build()
+            );
+
+            controllerCategory.addEntry(
+                    entryBuilder.startFloatField(Component.translatable(profile.expoKey()), Config.expos[i])
+                            .setDefaultValue(Config.DEFAULT_EXPOS[i])
+                            .setDisplayRequirement(Requirement.isValue(profileEntry, profile))
+                            .setSaveConsumer(value -> Config.expos[i] = value)
+                            .build()
+            );
+        }
 
         controllerCategory.addEntry(
                 entryBuilder.startFloatField(Component.translatable("quadz.config.controller.deadzone"), Config.deadzone)

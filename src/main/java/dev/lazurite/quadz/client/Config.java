@@ -1,5 +1,6 @@
 package dev.lazurite.quadz.client;
 
+import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 import com.google.gson.JsonPrimitive;
@@ -29,9 +30,21 @@ public class Config {
     public static boolean throttleInCenter = false;
 
     public static RateProfile rateProfile = RateProfile.BETAFLIGHT;
-    public static float rate = 0.7f;
-    public static float superRate = 0.8f;
-    public static float expo = 0.0f;
+
+    // Per-profile rate parameters, indexed by RateProfile.ordinal() so each profile remembers its
+    // own values (switching profiles no longer drags unsuitable numbers across). Order MUST match
+    // the RateProfile enum: BETAFLIGHT, ACTUAL, KISS.
+    public static final float[] DEFAULT_RATES       = { 1.0f,  70.0f, 1.0f };
+    public static final float[] DEFAULT_SUPER_RATES = { 0.7f, 670.0f, 0.7f };
+    public static final float[] DEFAULT_EXPOS       = { 0.0f,   0.0f, 0.0f };
+    public static final float[] rates      = DEFAULT_RATES.clone();
+    public static final float[] superRates = DEFAULT_SUPER_RATES.clone();
+    public static final float[] expos      = DEFAULT_EXPOS.clone();
+
+    /** The active profile's rate parameter (what flight/sync should use). */
+    public static float rate()      { return rates[rateProfile.ordinal()]; }
+    public static float superRate() { return superRates[rateProfile.ordinal()]; }
+    public static float expo()      { return expos[rateProfile.ordinal()]; }
 
     public static float deadzone = 0.05f;
     public static boolean followLOS = true;
@@ -65,9 +78,9 @@ public class Config {
         config.add("throttleInverted", new JsonPrimitive(throttleInverted));
         config.add("throttleInCenter", new JsonPrimitive(throttleInCenter));
         config.add("rateProfile", new JsonPrimitive(rateProfile.name()));
-        config.add("rate", new JsonPrimitive(rate));
-        config.add("superRate", new JsonPrimitive(superRate));
-        config.add("expo", new JsonPrimitive(expo));
+        config.add("rates", floatArrayToJson(rates));
+        config.add("superRates", floatArrayToJson(superRates));
+        config.add("expos", floatArrayToJson(expos));
         config.add("controllerId", new JsonPrimitive(controllerId));
         config.add("deadzone", new JsonPrimitive(deadzone));
         config.add("followLOS", new JsonPrimitive(followLOS));
@@ -110,9 +123,17 @@ public class Config {
             throttleInverted = config.get("throttleInverted").getAsBoolean();
             throttleInCenter = config.get("throttleInCenter").getAsBoolean();
             if (config.has("rateProfile")) rateProfile = RateProfile.valueOf(config.get("rateProfile").getAsString());
-            rate = config.get("rate").getAsFloat();
-            superRate = config.get("superRate").getAsFloat();
-            expo = config.get("expo").getAsFloat();
+            if (config.has("rates")) {
+                readFloatArray(config, "rates", rates);
+                readFloatArray(config, "superRates", superRates);
+                readFloatArray(config, "expos", expos);
+            } else if (config.has("rate")) {
+                // Migrate a legacy single-value config: those values belonged to the then-active profile.
+                final var i = rateProfile.ordinal();
+                rates[i] = config.get("rate").getAsFloat();
+                superRates[i] = config.get("superRate").getAsFloat();
+                expos[i] = config.get("expo").getAsFloat();
+            }
             controllerId = config.get("controllerId").getAsInt();
             deadzone = config.get("deadzone").getAsFloat();
             followLOS = config.get("followLOS").getAsBoolean();
@@ -130,6 +151,24 @@ public class Config {
             fisheyeAmount = config.get("fisheyeAmount").getAsFloat();
         } catch(IOException e) {
             Quadz.LOGGER.error(e);
+        }
+    }
+
+    private static JsonArray floatArrayToJson(float[] values) {
+        final var arr = new JsonArray();
+        for (float v : values) {
+            arr.add(v);
+        }
+        return arr;
+    }
+
+    private static void readFloatArray(JsonObject config, String key, float[] dest) {
+        if (!config.has(key)) {
+            return;
+        }
+        final var arr = config.getAsJsonArray(key);
+        for (int i = 0; i < dest.length && i < arr.size(); i++) {
+            dest[i] = arr.get(i).getAsFloat();
         }
     }
 

@@ -32,9 +32,9 @@ public class ClientEventHooks {
         }
 
         player.quadz$setJoystickValue(Identifier.fromNamespaceAndPath(Quadz.MODID, "rate_profile"), Config.rateProfile.ordinal());
-        player.quadz$setJoystickValue(Identifier.fromNamespaceAndPath(Quadz.MODID, "rate"), Config.rate);
-        player.quadz$setJoystickValue(Identifier.fromNamespaceAndPath(Quadz.MODID, "super_rate"), Config.superRate);
-        player.quadz$setJoystickValue(Identifier.fromNamespaceAndPath(Quadz.MODID, "expo"), Config.expo);
+        player.quadz$setJoystickValue(Identifier.fromNamespaceAndPath(Quadz.MODID, "rate"), Config.rate());
+        player.quadz$setJoystickValue(Identifier.fromNamespaceAndPath(Quadz.MODID, "super_rate"), Config.superRate());
+        player.quadz$setJoystickValue(Identifier.fromNamespaceAndPath(Quadz.MODID, "expo"), Config.expo());
     }
 
     public static void onClientTick(Minecraft minecraft) {
