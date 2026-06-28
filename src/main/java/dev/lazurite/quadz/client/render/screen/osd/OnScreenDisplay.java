@@ -39,10 +39,9 @@ public class OnScreenDisplay {
             var width = Minecraft.getInstance().getWindow().getGuiScaledWidth();
             var height = Minecraft.getInstance().getWindow().getGuiScaledHeight();
             var scale = Math.max(1, Math.round(25 * Config.stickScale));
-            // Fixed gimbal separation and bottom margin so the two sticks stay spread out and
-            // low on the screen regardless of size (instead of clustering toward the centre).
-            var offset = 60;
-            var bottomMargin = 60;
+            // Gimbal separation and bottom margin scale proportionally with the gimbal size.
+            var offset = Math.round(scale * 2.5f);
+            var bottomMargin = Math.round(scale * 2.5f);
             renderSticks(guiGraphics, tickDelta, width / 2, height - bottomMargin, scale, offset, pitch, yaw, roll, throttle);
         });
     }
