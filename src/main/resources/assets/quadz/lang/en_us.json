@@ -77,5 +77,8 @@
 
   "key.category.quadz.quadz" : "Quadz",
   "quadz.key.camera_up" : "Increase Camera Uptilt (FPV)",
-  "quadz.key.camera_down" : "Decrease Camera Uptilt (FPV)"
+  "quadz.key.camera_down" : "Decrease Camera Uptilt (FPV)",
+  "quadz.key.arm_disarm" : "Arm / Disarm (FPV)",
+
+  "quadz.osd.disarmed" : "DISARMED"
 }

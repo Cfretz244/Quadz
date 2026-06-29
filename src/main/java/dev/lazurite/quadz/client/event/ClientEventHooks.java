@@ -84,6 +84,15 @@ public class ClientEventHooks {
             // Briefly surface the readout even when its toggle is off, so the pilot sees the value change.
             OnScreenDisplay.flashCameraAngle();
         }
+
+        // Explicit arm/disarm: each press toggles the viewed drone's armed state (override on top
+        // of auto-arm). The server flips ARMED and syncs it back.
+        var armToggles = 0;
+        while (QuadzClient.ARM_DISARM.consumeClick()) armToggles++;
+
+        if (armToggles % 2 != 0 && QuadzClient.getQuadcopterFromCamera().isPresent()) {
+            ClientNetworking.send(Quadz.Networking.ARM_DISARM, buf -> {});
+        }
     }
 
     public static void onJoystickConnect(int id, String name) {

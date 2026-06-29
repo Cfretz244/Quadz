@@ -38,6 +38,9 @@ public class QuadzClient implements ClientModInitializer {
             "quadz.key.camera_up", InputConstants.Type.KEYSYM, GLFW.GLFW_KEY_UP, KEY_CATEGORY);
     public static final KeyMapping CAMERA_DOWN = new KeyMapping(
             "quadz.key.camera_down", InputConstants.Type.KEYSYM, GLFW.GLFW_KEY_DOWN, KEY_CATEGORY);
+    // Explicit arm/disarm override for the viewed drone (rebindable; default R).
+    public static final KeyMapping ARM_DISARM = new KeyMapping(
+            "quadz.key.arm_disarm", InputConstants.Type.KEYSYM, GLFW.GLFW_KEY_R, KEY_CATEGORY);
 
     /**
      * Finds the player's quadcopter based on its camera view.
@@ -71,6 +74,7 @@ public class QuadzClient implements ClientModInitializer {
         // Keybinds
         KeyMappingHelper.registerKeyMapping(CAMERA_UP);
         KeyMappingHelper.registerKeyMapping(CAMERA_DOWN);
+        KeyMappingHelper.registerKeyMapping(ARM_DISARM);
 
         // Renderer
         EntityRendererRegistry.register(Quadz.QUADCOPTER, QuadcopterEntityRenderer::new);

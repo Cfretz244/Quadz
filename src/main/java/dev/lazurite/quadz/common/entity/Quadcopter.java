@@ -68,6 +68,10 @@ public class Quadcopter extends LivingEntity implements EntityPhysicsElement, Te
     private final EntityRigidBody rigidBody = new EntityRigidBody(this);
     private final QuadcopterView view = new QuadcopterView(this);
 
+    // Server-side, transient: tracks whether a pilot was viewing last tick so we auto-arm only on
+    // view entry (after that the explicit arm/disarm toggle owns the ARMED state).
+    private boolean wasViewed = false;
+
     public Quadcopter(EntityType<? extends LivingEntity> entityType, Level level) {
         super(entityType, level);
         // 1.21.2: Entity.noCulling is gone; culling is disabled via
@@ -110,11 +114,19 @@ public class Quadcopter extends LivingEntity implements EntityPhysicsElement, Te
         }
 
         Search.forPlayer(this).ifPresentOrElse(player -> {
-            this.setArmed(true);
             player.quadz$syncJoystick();
 
-            if (player instanceof ServerPlayer serverPlayer && serverPlayer.getCamera() == this && !player.equals(this.getRigidBody().getPriorityPlayer())) {
-                this.getRigidBody().prioritize(player);
+            if (!this.level().isClientSide()) {
+                // Auto-arm when the pilot first enters the view; after that the explicit arm/disarm
+                // toggle owns the state, so we don't force it back to armed every tick.
+                if (!this.wasViewed) {
+                    this.setArmed(true);
+                    this.wasViewed = true;
+                }
+
+                if (player instanceof ServerPlayer serverPlayer && serverPlayer.getCamera() == this && !player.equals(this.getRigidBody().getPriorityPlayer())) {
+                    this.getRigidBody().prioritize(player);
+                }
             }
 
             var pitch = player.quadz$getJoystickValue(Identifier.fromNamespaceAndPath(Quadz.MODID, "pitch"));
@@ -140,43 +152,47 @@ public class Quadcopter extends LivingEntity implements EntityPhysicsElement, Te
             var profileIndex = Math.round(player.quadz$getJoystickValue(Identifier.fromNamespaceAndPath(Quadz.MODID, "rate_profile")));
             var profile = profiles[Math.max(0, Math.min(profiles.length - 1, profileIndex))];
 
-            this.rotate(
-                    (float) profile.calculate(pitch, pitchRate, pitchSuperRate, pitchExpo, 0.05f),
-                    (float) profile.calculate(yaw, yawRate, yawSuperRate, yawExpo, 0.05f),
-                    (float) profile.calculate(roll, rollRate, rollSuperRate, rollExpo, 0.05f)
-            );
+            // Motors only respond while armed. Disarmed = no control authority or thrust (and the
+            // GeckoLib controller stops the props), so the drone just falls/coasts on physics.
+            if (this.isArmed()) {
+                this.rotate(
+                        (float) profile.calculate(pitch, pitchRate, pitchSuperRate, pitchExpo, 0.05f),
+                        (float) profile.calculate(yaw, yawRate, yawSuperRate, yawExpo, 0.05f),
+                        (float) profile.calculate(roll, rollRate, rollSuperRate, rollExpo, 0.05f)
+                );
 
-            // Decrease angular velocity
-            if (throttle > 0.1f) {
-                var correction = getRigidBody().getAngularVelocity(new Vector3f()).multLocal(0.5f * throttle);
+                // Decrease angular velocity
+                if (throttle > 0.1f) {
+                    var correction = getRigidBody().getAngularVelocity(new Vector3f()).multLocal(0.5f * throttle);
 
-                if (Float.isFinite(correction.lengthSquared())) {
-                    getRigidBody().setAngularVelocity(correction);
+                    if (Float.isFinite(correction.lengthSquared())) {
+                        getRigidBody().setAngularVelocity(correction);
+                    }
+                }
+
+                // Get the thrust unit vector
+                // TODO make this into it's own class
+                var mat = new Matrix4f();
+                Matrix4fHelper.fromQuaternion(mat, QuaternionHelper.rotateX(Convert.toMinecraft(getRigidBody().getPhysicsRotation(new Quaternion())), 90));
+                var unit = Convert.toBullet(Matrix4fHelper.matrixToVector(mat));
+
+                // Calculate basic thrust
+                var thrust = new Vector3f().set(unit).multLocal((float) (getThrust() * (Math.pow(throttle, getThrustCurve()))));
+
+                // Calculate thrust from yaw spin
+                var yawThrust = new Vector3f().set(unit).multLocal(Math.abs(yaw * getThrust() * 0.002f));
+
+                // Add up the net thrust and apply the force
+                if (Float.isFinite(thrust.length())) {
+                    getRigidBody().applyCentralForce(thrust.add(yawThrust).multLocal(-1));
+                } else {
+                    Quadz.LOGGER.warn("Infinite thrust force!");
                 }
             }
-
-            // Get the thrust unit vector
-            // TODO make this into it's own class
-            var mat = new Matrix4f();
-            Matrix4fHelper.fromQuaternion(mat, QuaternionHelper.rotateX(Convert.toMinecraft(getRigidBody().getPhysicsRotation(new Quaternion())), 90));
-            var unit = Convert.toBullet(Matrix4fHelper.matrixToVector(mat));
-
-            // Calculate basic thrust
-            var thrust = new Vector3f().set(unit).multLocal((float) (getThrust() * (Math.pow(throttle, getThrustCurve()))));
-
-            // Calculate thrust from yaw spin
-            var yawThrust = new Vector3f().set(unit).multLocal(Math.abs(yaw * getThrust() * 0.002f));
-
-            // Add up the net thrust and apply the force
-            if (Float.isFinite(thrust.length())) {
-                getRigidBody().applyCentralForce(thrust.add(yawThrust).multLocal(-1));
-            } else {
-                Quadz.LOGGER.warn("Infinite thrust force!");
-            }
         }, () -> {
-            this.setArmed(false);
-
             if (!this.level().isClientSide()) {
+                this.setArmed(false);
+                this.wasViewed = false;
                 this.getRigidBody().prioritize(null);
             }
         });

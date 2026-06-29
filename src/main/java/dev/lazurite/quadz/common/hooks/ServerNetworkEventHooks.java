@@ -80,4 +80,18 @@ public class ServerNetworkEventHooks {
         }));
     }
 
+    /**
+     * Toggles the armed state of the quadcopter the player is currently viewing — the explicit
+     * override on top of auto-arm. Disarming cuts motors (see {@link Quadcopter#tick}).
+     */
+    public static void onArmDisarm(PacketRegistry.ServerboundContext context) {
+        var player = context.player();
+
+        Optional.ofNullable(player.level().getServer()).ifPresent(server -> server.execute(() -> {
+            if (player.getCamera() instanceof Quadcopter quadcopter) {
+                quadcopter.setArmed(!quadcopter.isArmed());
+            }
+        }));
+    }
+
 }

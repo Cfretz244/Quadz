@@ -72,6 +72,18 @@ public class OnScreenDisplay {
         guiGraphics.text(font, text, 25, height, (alpha << 24) | 0xFFFFFF, true);
     }
 
+    /** Centered "DISARMED" warning, shown whenever the viewed drone's motors are off. */
+    public void renderDisarmed(GuiGraphicsExtractor guiGraphics, float tickDelta) {
+        if (quadcopter.isArmed()) {
+            return;
+        }
+        var client = Minecraft.getInstance();
+        final var text = Component.translatable("quadz.osd.disarmed");
+        final var x = (client.getWindow().getGuiScaledWidth() - font.width(text)) / 2;
+        final var y = client.getWindow().getGuiScaledHeight() / 3;
+        guiGraphics.text(font, text, x, y, 0xFFFF5555, true);
+    }
+
     public void renderSticks(GuiGraphicsExtractor guiGraphics, float tickDelta) {
         Search.forPlayer(quadcopter).ifPresent(player -> {
             var pitch = player.quadz$getJoystickValue(Identifier.fromNamespaceAndPath(Quadz.MODID, "pitch"));
