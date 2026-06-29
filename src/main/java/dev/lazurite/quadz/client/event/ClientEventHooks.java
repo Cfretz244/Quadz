@@ -15,10 +15,10 @@ import net.minecraft.resources.Identifier;
 
 public class ClientEventHooks {
 
-    // Controller arm-switch tracking: last computed switch state and whether we were viewing a drone
-    // last tick, so we only push SET_ARMED on a switch flip or on view entry (not every tick).
+    // Controller arm-switch tracking: last computed switch state and whether we were controlling a
+    // drone last tick, so we only push SET_ARMED on a switch flip or on control entry (not every tick).
     private static Boolean armSwitchArmed = null;
-    private static boolean prevViewing = false;
+    private static boolean prevControlling = false;
 
     public static void onPostLogin(Minecraft minecraft, ClientLevel level, LocalPlayer player) {
         if (player != null) {
@@ -62,6 +62,11 @@ public class ClientEventHooks {
         return Identifier.fromNamespaceAndPath(Quadz.MODID, path);
     }
 
+    /** Whether the local player is controlling a drone — via its camera (FPV) or a bound remote (LOS). */
+    private static boolean controllingQuadcopter() {
+        return QuadzClient.getQuadcopterFromCamera().isPresent() || QuadzClient.getQuadcopterFromRemote().isPresent();
+    }
+
     public static void onClientTick(Minecraft minecraft) {
         if (minecraft.isPaused() || minecraft.player == null) {
             return;
@@ -90,34 +95,37 @@ public class ClientEventHooks {
             OnScreenDisplay.flashCameraAngle();
         }
 
-        // Explicit arm/disarm (keyboard): each press toggles the viewed drone's armed state (override
-        // on top of auto-arm). The server flips ARMED and syncs it back.
+        // Whether we're currently controlling a drone — via its camera (FPV) or a bound remote (LOS).
+        // Arm/disarm works in both, not just FPV.
+        final var controlling = controllingQuadcopter();
+
+        // Explicit arm/disarm (keyboard): each press toggles the controlled drone's armed state
+        // (override on top of auto-arm). The server flips ARMED and syncs it back.
         var armToggles = 0;
         while (QuadzClient.ARM_DISARM.consumeClick()) armToggles++;
 
-        if (armToggles % 2 != 0 && QuadzClient.getQuadcopterFromCamera().isPresent()) {
+        if (armToggles % 2 != 0 && controlling) {
             ClientNetworking.send(Quadz.Networking.ARM_DISARM, buf -> {});
         }
 
         // Controller arm switch (direct position): authoritative when bound. We push the switch's
-        // state on a flip or on view entry (overriding auto-arm), via the SET_ARMED packet.
-        final var viewing = QuadzClient.getQuadcopterFromCamera().isPresent();
+        // state on a flip or on control entry (overriding auto-arm), via the SET_ARMED packet.
         if (Config.armAxis >= 0 && JoystickOutput.controllerExists()) {
             final var axes = JoystickOutput.getAllAxisValues();
             if (axes != null && Config.armAxis < axes.capacity()) {
                 final var value = axes.get(Config.armAxis);
                 // Default: "down" (negative axis) = armed, "up" = disarmed; armInverted flips it.
                 final boolean desired = Config.armInverted ? value > 0.0f : value < 0.0f;
-                final boolean entered = viewing && !prevViewing;
+                final boolean entered = controlling && !prevControlling;
                 final boolean flipped = armSwitchArmed == null || desired != armSwitchArmed;
 
-                if (viewing && (entered || flipped)) {
+                if (controlling && (entered || flipped)) {
                     ClientNetworking.send(Quadz.Networking.SET_ARMED, buf -> buf.writeBoolean(desired));
                 }
                 armSwitchArmed = desired;
             }
         }
-        prevViewing = viewing;
+        prevControlling = controlling;
     }
 
     public static void onJoystickConnect(int id, String name) {

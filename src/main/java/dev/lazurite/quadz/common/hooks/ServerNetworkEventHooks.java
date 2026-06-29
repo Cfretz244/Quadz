@@ -5,6 +5,8 @@ import dev.lazurite.quadz.common.util.Search;
 import dev.lazurite.quadz.common.util.event.CameraEvents;
 import dev.lazurite.quadz.common.entity.Quadcopter;
 import dev.lazurite.toolbox.api.network.PacketRegistry;
+import net.minecraft.server.MinecraftServer;
+import net.minecraft.server.level.ServerPlayer;
 
 import java.util.ArrayList;
 import java.util.Optional;
@@ -87,26 +89,35 @@ public class ServerNetworkEventHooks {
     public static void onArmDisarm(PacketRegistry.ServerboundContext context) {
         var player = context.player();
 
-        Optional.ofNullable(player.level().getServer()).ifPresent(server -> server.execute(() -> {
-            if (player.getCamera() instanceof Quadcopter quadcopter) {
-                quadcopter.setArmed(!quadcopter.isArmed());
-            }
-        }));
+        Optional.ofNullable(player.level().getServer()).ifPresent(server -> server.execute(() ->
+                controlledQuadcopter(player, server).ifPresent(quadcopter -> quadcopter.setArmed(!quadcopter.isArmed()))));
     }
 
     /**
-     * Sets the viewed drone's armed state to a specific value — used by the controller arm switch,
+     * Sets the controlled drone's armed state to a specific value — used by the controller arm switch,
      * which is a direct position (switch up/down) rather than a toggle.
      */
     public static void onSetArmed(PacketRegistry.ServerboundContext context) {
         var player = context.player();
         var armed = context.byteBuf().readBoolean();
 
-        Optional.ofNullable(player.level().getServer()).ifPresent(server -> server.execute(() -> {
-            if (player.getCamera() instanceof Quadcopter quadcopter) {
-                quadcopter.setArmed(armed);
-            }
-        }));
+        Optional.ofNullable(player.level().getServer()).ifPresent(server -> server.execute(() ->
+                controlledQuadcopter(player, server).ifPresent(quadcopter -> quadcopter.setArmed(armed))));
+    }
+
+    /**
+     * The drone the player is currently controlling: the one they're viewing through (FPV), or — when
+     * not in a drone's camera (e.g. line-of-sight) — the drone their held remote is bound to. This lets
+     * arm/disarm work in LOS, not just FPV.
+     */
+    private static Optional<Quadcopter> controlledQuadcopter(ServerPlayer player, MinecraftServer server) {
+        if (player.getCamera() instanceof Quadcopter quadcopter) {
+            return Optional.of(quadcopter);
+        }
+
+        return Bindable.get(player.getMainHandItem()).flatMap(bindable ->
+                Search.forQuadWithBindId(player.level(), player.position(), bindable.getBindId(),
+                        server.getPlayerList().getViewDistance() * 16));
     }
 
 }
