@@ -79,7 +79,25 @@ public class Config {
         return FabricLoader.getInstance().getConfigDir().resolve("quadz.json");
     }
 
+    /**
+     * Copies the shared per-profile rate values onto all three per-axis sets. Called whenever axes
+     * are linked (on save + load) so that turning Link Axes off later seeds each axis from your
+     * current tuning rather than from defaults. While unlinked this is NOT run, so per-axis edits
+     * are preserved.
+     */
+    public static void mirrorPerAxisFromShared() {
+        for (int i = 0; i < rates.length; i++) {
+            pitchRates[i] = yawRates[i] = rollRates[i] = rates[i];
+            pitchSuperRates[i] = yawSuperRates[i] = rollSuperRates[i] = superRates[i];
+            pitchExpos[i] = yawExpos[i] = rollExpos[i] = expos[i];
+        }
+    }
+
     public static void save() {
+        if (linkAxes) {
+            mirrorPerAxisFromShared();
+        }
+
         final var path = getConfigPath();
         final var config = new JsonObject();
 
@@ -169,6 +187,11 @@ public class Config {
                 rates[i] = config.get("rate").getAsFloat();
                 superRates[i] = config.get("superRate").getAsFloat();
                 expos[i] = config.get("expo").getAsFloat();
+            }
+            // While linked, keep per-axis mirrored to shared (also seeds per-axis for older configs
+            // that predate the per-axis keys), so unlinking later starts from your current values.
+            if (linkAxes) {
+                mirrorPerAxisFromShared();
             }
             controllerId = config.get("controllerId").getAsInt();
             deadzone = config.get("deadzone").getAsFloat();
