@@ -15,10 +15,20 @@ import net.minecraft.network.chat.Component;
 public interface MainConfigScreen {
 
     static Screen get(Screen parent) {
+        // Captured to detect an in-session Link Axes on -> off transition when the screen saves.
+        final boolean wasLinked = Config.linkAxes;
+
         var builder = ConfigBuilder.create()
             .setParentScreen(parent)
             .setTitle(Component.translatable("quadz.config.title"))
             .setSavingRunnable(() -> {
+                // If the user just turned Link Axes off, seed every axis from the (shared) values
+                // they had while linked — including edits made this same session, since the field
+                // save-consumers have already run by now. Cloth closes the screen on save, so the
+                // per-axis fields show these seeded values the next time it's opened.
+                if (wasLinked && !Config.linkAxes) {
+                    Config.mirrorPerAxisFromShared();
+                }
                 Config.save();
                 // Re-push rate/profile to the synced joystick values so changes apply without relog.
                 ClientEventHooks.applyRateConfig(Minecraft.getInstance().player);
