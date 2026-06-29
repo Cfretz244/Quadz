@@ -79,8 +79,10 @@ public class QuadcopterView extends View implements View.Ticking {
             this.osd.renderCameraAngle(guiGraphics, tickDelta);
         }
 
-        // Disarmed warning is independent of the OSD toggles — it's safety feedback, always shown.
-        this.osd.renderDisarmed(guiGraphics, tickDelta);
+        // Disarmed warning follows the master OSD toggle (per tester request).
+        if (Config.osdEnabled) {
+            this.osd.renderDisarmed(guiGraphics, tickDelta);
+        }
     }
 
     /**

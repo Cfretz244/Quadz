@@ -23,6 +23,12 @@ public class Config {
     public static int roll = 0;
     public static int throttle = 2;
 
+    // Optional controller arm/disarm switch, bound to a joystick axis (-1 = unbound). Direct switch:
+    // by default the "down" position (negative axis) = armed, "up" = disarmed; armInverted flips that
+    // for controllers whose axis sign is reversed.
+    public static int armAxis = -1;
+    public static boolean armInverted = false;
+
     public static boolean pitchInverted = false;
     public static boolean yawInverted = false;
     public static boolean rollInverted = false;
@@ -105,6 +111,8 @@ public class Config {
         config.add("yaw", new JsonPrimitive(yaw));
         config.add("roll", new JsonPrimitive(roll));
         config.add("throttle", new JsonPrimitive(throttle));
+        config.add("armAxis", new JsonPrimitive(armAxis));
+        config.add("armInverted", new JsonPrimitive(armInverted));
         config.add("pitchInverted", new JsonPrimitive(pitchInverted));
         config.add("yawInverted", new JsonPrimitive(yawInverted));
         config.add("rollInverted", new JsonPrimitive(rollInverted));
@@ -160,6 +168,8 @@ public class Config {
             yaw = config.get("yaw").getAsInt();
             roll = config.get("roll").getAsInt();
             throttle = config.get("throttle").getAsInt();
+            if (config.has("armAxis")) armAxis = config.get("armAxis").getAsInt();
+            if (config.has("armInverted")) armInverted = config.get("armInverted").getAsBoolean();
             pitchInverted = config.get("pitchInverted").getAsBoolean();
             yawInverted = config.get("yawInverted").getAsBoolean();
             rollInverted = config.get("rollInverted").getAsBoolean();

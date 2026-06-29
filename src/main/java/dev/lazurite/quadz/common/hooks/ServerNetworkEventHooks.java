@@ -94,4 +94,19 @@ public class ServerNetworkEventHooks {
         }));
     }
 
+    /**
+     * Sets the viewed drone's armed state to a specific value — used by the controller arm switch,
+     * which is a direct position (switch up/down) rather than a toggle.
+     */
+    public static void onSetArmed(PacketRegistry.ServerboundContext context) {
+        var player = context.player();
+        var armed = context.byteBuf().readBoolean();
+
+        Optional.ofNullable(player.level().getServer()).ifPresent(server -> server.execute(() -> {
+            if (player.getCamera() instanceof Quadcopter quadcopter) {
+                quadcopter.setArmed(armed);
+            }
+        }));
+    }
+
 }

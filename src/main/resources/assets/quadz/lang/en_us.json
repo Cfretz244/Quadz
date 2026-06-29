@@ -66,6 +66,7 @@
   "quadz.config.controller_setup.roll": "Roll",
   "quadz.config.controller_setup.throttle": "Throttle",
   "quadz.config.controller_setup.invert": "Invert",
+  "quadz.config.controller_setup.arm": "Arm Switch",
   "quadz.config.controller_setup.prompt": "Move the correct stick to assign the axis.",
 
   "quadz.toast.connect" : "Connected",

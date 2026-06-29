@@ -35,6 +35,8 @@ public class ControllerSetupScreen extends Screen {
     private Button invertYawButton;
     private Button invertRollButton;
     private Button invertThrottleButton;
+    private Button armButton;
+    private Button invertArmButton;
     private Consumer<Integer> axisConsumer;
 
     private FloatBuffer axes;
@@ -106,6 +108,17 @@ public class ControllerSetupScreen extends Screen {
                 .size(bWidth, bHeight)
                 .build();
 
+        // Arm switch: bind an axis (flip the switch) + invert. Optional; -1 = unbound.
+        this.armButton = Button.builder(Component.translatable("quadz.config.controller_setup.arm"), button -> onAxisButton(axis -> Config.armAxis = axis))
+                .pos(width / 2 - bWidth - spacing / 2, bHeight * 4 + spacing * 2)
+                .size(bWidth, bHeight)
+                .build();
+
+        this.invertArmButton = Button.builder(Component.translatable("quadz.config.controller_setup.invert"), button -> Config.armInverted = !Config.armInverted)
+                .pos(width / 2 + spacing / 2, bHeight * 4 + spacing * 2)
+                .size(bWidth, bHeight)
+                .build();
+
         this.addRenderableWidget(this.saveButton);
         this.addRenderableWidget(this.cancelButton);
         this.addRenderableWidget(this.configButton);
@@ -117,6 +130,8 @@ public class ControllerSetupScreen extends Screen {
         this.addRenderableWidget(this.invertYawButton);
         this.addRenderableWidget(this.invertRollButton);
         this.addRenderableWidget(this.invertThrottleButton);
+        this.addRenderableWidget(this.armButton);
+        this.addRenderableWidget(this.invertArmButton);
     }
 
     private void onSaveButton(Button button) {
@@ -143,6 +158,8 @@ public class ControllerSetupScreen extends Screen {
         this.invertYawButton.active = false;
         this.invertRollButton.active = false;
         this.invertThrottleButton.active = false;
+        this.armButton.active = false;
+        this.invertArmButton.active = false;
     }
 
     @Override
@@ -163,6 +180,8 @@ public class ControllerSetupScreen extends Screen {
                 this.invertYawButton.active = true;
                 this.invertRollButton.active = true;
                 this.invertThrottleButton.active = true;
+                this.armButton.active = true;
+                this.invertArmButton.active = true;
                 break;
             }
         }
@@ -182,6 +201,12 @@ public class ControllerSetupScreen extends Screen {
         var roll = JoystickOutput.getAxisValue(null, Config.roll, this.rollLocation, Config.rollInverted, false);
         var throttle = JoystickOutput.getAxisValue(null, Config.throttle, this.throttleLocation, Config.throttleInverted, Config.throttleInCenter) + 1.0f;
         OnScreenDisplay.renderSticks(guiGraphics, f, width / 2, height / 2 + 20, 40, 50, pitch, yaw, roll, throttle);
+
+        // Arm-switch binding status, just above its bind/invert buttons.
+        var armStatus = Config.armAxis < 0
+                ? "Arm switch: unbound"
+                : "Arm switch: axis " + Config.armAxis + (Config.armInverted ? " (inverted)" : "");
+        guiGraphics.centeredText(this.font, Component.literal(armStatus), this.width / 2, 20 * 4 + 10, 0xFFFFFF);
 
         // An axis has been selected. Time to listen...
         if (this.axisConsumer != null) {

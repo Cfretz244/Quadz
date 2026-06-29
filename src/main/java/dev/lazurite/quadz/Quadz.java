@@ -72,6 +72,7 @@ public class Quadz implements ModInitializer {
         PacketRegistry.registerServerbound(Networking.REQUEST_PLAYER_VIEW, ServerNetworkEventHooks::onPlayerViewRequestReceived);
         PacketRegistry.registerServerbound(Networking.ADJUST_CAMERA_ANGLE, ServerNetworkEventHooks::onAdjustCameraAngle);
         PacketRegistry.registerServerbound(Networking.ARM_DISARM, ServerNetworkEventHooks::onArmDisarm);
+        PacketRegistry.registerServerbound(Networking.SET_ARMED, ServerNetworkEventHooks::onSetArmed);
 
         // Load templates
         TemplateLoader.initialize(MODID);
@@ -84,6 +85,7 @@ public class Quadz implements ModInitializer {
         public static final Identifier REQUEST_PLAYER_VIEW = Identifier.fromNamespaceAndPath(MODID, "request_player_view");
         public static final Identifier ADJUST_CAMERA_ANGLE = Identifier.fromNamespaceAndPath(MODID, "adjust_camera_angle");
         public static final Identifier ARM_DISARM = Identifier.fromNamespaceAndPath(MODID, "arm_disarm");
+        public static final Identifier SET_ARMED = Identifier.fromNamespaceAndPath(MODID, "set_armed");
 
     }
 
