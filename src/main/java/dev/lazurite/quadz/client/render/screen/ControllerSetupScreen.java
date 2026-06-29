@@ -200,13 +200,27 @@ public class ControllerSetupScreen extends Screen {
         var yaw = JoystickOutput.getAxisValue(null, Config.yaw, this.yawLocation, Config.yawInverted, false);
         var roll = JoystickOutput.getAxisValue(null, Config.roll, this.rollLocation, Config.rollInverted, false);
         var throttle = JoystickOutput.getAxisValue(null, Config.throttle, this.throttleLocation, Config.throttleInverted, Config.throttleInCenter) + 1.0f;
-        OnScreenDisplay.renderSticks(guiGraphics, f, width / 2, height / 2 + 20, 40, 50, pitch, yaw, roll, throttle);
+        // Gimbal overlay: smaller and lower than before so it doesn't crowd the arm-switch buttons.
+        OnScreenDisplay.renderSticks(guiGraphics, f, width / 2, height / 2 + 55, 28, 40, pitch, yaw, roll, throttle);
 
         // Arm-switch binding status, just above its bind/invert buttons.
         var armStatus = Config.armAxis < 0
                 ? "Arm switch: unbound"
                 : "Arm switch: axis " + Config.armAxis + (Config.armInverted ? " (inverted)" : "");
         guiGraphics.centeredText(this.font, Component.literal(armStatus), this.width / 2, 20 * 4 + 10, 0xFFFFFF);
+
+        // Live position light next to the Arm button: green = armed, red = disarmed.
+        if (Config.armAxis >= 0) {
+            var armed = false;
+            var armAxes = JoystickOutput.getAllAxisValues();
+            if (armAxes != null && Config.armAxis < armAxes.capacity()) {
+                var av = armAxes.get(Config.armAxis);
+                armed = Config.armInverted ? av > 0.0f : av < 0.0f;
+            }
+            var lx = this.width / 2 - 60 - 5 - 16;  // just left of the Arm bind button (bWidth 60, spacing/2 5)
+            var ly = 20 * 4 + 20 + 4;               // aligned with the arm button row
+            guiGraphics.fill(lx, ly, lx + 12, ly + 12, armed ? 0xFF44DD44 : 0xFFDD4444);
+        }
 
         // An axis has been selected. Time to listen...
         if (this.axisConsumer != null) {
