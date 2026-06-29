@@ -72,6 +72,10 @@ public class Quadcopter extends LivingEntity implements EntityPhysicsElement, Te
     // view entry (after that the explicit arm/disarm toggle owns the ARMED state).
     private boolean wasViewed = false;
 
+    // Server-side, transient: a camera angle to restore on placement (from a picked-up drone item),
+    // honored by ServerEventHooks.onEntityTemplateChanged instead of the template default. Consumed once.
+    private Integer pendingCameraAngle = null;
+
     public Quadcopter(EntityType<? extends LivingEntity> entityType, Level level) {
         super(entityType, level);
         // 1.21.2: Entity.noCulling is gone; culling is disabled via
@@ -242,6 +246,8 @@ public class Quadcopter extends LivingEntity implements EntityPhysicsElement, Te
         var itemStack = new ItemStack(Quadz.QUADCOPTER_ITEM);
         Bindable.get(itemStack).ifPresent(bindable -> bindable.copyFrom(this));
         Templated.get(itemStack).copyFrom(this);
+        // Preserve the adjusted camera uptilt on the dropped item so it survives re-placement.
+        itemStack.set(dev.lazurite.quadz.common.util.QuadzComponents.CAMERA_ANGLE, this.getEntityData().get(CAMERA_ANGLE));
         this.spawnAtLocation(level, itemStack);
         this.remove(RemovalReason.KILLED);
     }
@@ -378,6 +384,18 @@ public class Quadcopter extends LivingEntity implements EntityPhysicsElement, Te
     @Override
     public void setTemplate(String template) {
         this.getEntityData().set(TEMPLATE, template);
+    }
+
+    /** Queue a camera uptilt to restore on placement (used when a drone item carries a saved angle). */
+    public void setPendingCameraAngle(int angle) {
+        this.pendingCameraAngle = angle;
+    }
+
+    /** Returns the pending camera angle (or null) and clears it. */
+    public Integer consumePendingCameraAngle() {
+        var angle = this.pendingCameraAngle;
+        this.pendingCameraAngle = null;
+        return angle;
     }
 
     public void setArmed(boolean armed) {

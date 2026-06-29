@@ -22,6 +22,15 @@ public final class QuadzComponents {
                     .networkSynchronized(ByteBufCodecs.VAR_INT)
                     .build());
 
+    /** Saved camera uptilt, stashed on the item when a drone is picked up so it persists past re-placement. */
+    public static final DataComponentType<Integer> CAMERA_ANGLE = Registry.register(
+            BuiltInRegistries.DATA_COMPONENT_TYPE,
+            Identifier.fromNamespaceAndPath(Quadz.MODID, "camera_angle"),
+            DataComponentType.<Integer>builder()
+                    .persistent(Codec.INT)
+                    .networkSynchronized(ByteBufCodecs.VAR_INT)
+                    .build());
+
     /** Touch the class so the static field registers during mod init. */
     public static void init() { }
 

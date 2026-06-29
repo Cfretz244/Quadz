@@ -62,6 +62,14 @@ public class QuadcopterItem extends Item implements GeoItem, Templated.Item {
             entity.copyFrom(Templated.get(itemStack));
             Bindable.get(itemStack).ifPresent(entity::copyFrom);
 
+            // If this drone item carries a saved camera uptilt (from being picked up), restore it on
+            // placement instead of the template default. Honored in ServerEventHooks.onEntityTemplateChanged,
+            // which runs on the entity's first tick (so setting it here, pre-spawn, takes effect).
+            var savedAngle = itemStack.get(dev.lazurite.quadz.common.util.QuadzComponents.CAMERA_ANGLE);
+            if (savedAngle != null) {
+                entity.setPendingCameraAngle(savedAngle);
+            }
+
             if (hitResult.getType() == HitResult.Type.BLOCK) {
                 entity.absSnapTo(hitResult.getLocation().x, hitResult.getLocation().y, hitResult.getLocation().z);
                 entity.getRigidBody().setPhysicsRotation(Convert.toBullet(QuaternionHelper.rotateY(Convert.toMinecraft(new Quaternion()), -player.getYRot())));

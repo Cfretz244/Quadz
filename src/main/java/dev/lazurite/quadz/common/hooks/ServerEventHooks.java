@@ -16,7 +16,11 @@ public class ServerEventHooks {
             quadcopter.getRigidBody().setCollisionShape(MinecraftShape.box(quadcopter.getBoundingBox()));
 
             TemplateLoader.getTemplateById(quadcopter.getTemplate()).ifPresent(template -> {
-                quadcopter.getEntityData().set(Quadcopter.CAMERA_ANGLE, template.metadata().get("cameraAngle").getAsInt());
+                // Restore a saved uptilt (from a picked-up drone item) if one is pending, else use the
+                // template default. This is the placement path, so it preserves the pilot's adjustment.
+                var pending = quadcopter.consumePendingCameraAngle();
+                quadcopter.getEntityData().set(Quadcopter.CAMERA_ANGLE,
+                        pending != null ? pending : template.metadata().get("cameraAngle").getAsInt());
                 quadcopter.getRigidBody().setMass(template.metadata().get("mass").getAsFloat());
                 quadcopter.getRigidBody().setDragCoefficient(template.metadata().get("dragCoefficient").getAsFloat());
             });
