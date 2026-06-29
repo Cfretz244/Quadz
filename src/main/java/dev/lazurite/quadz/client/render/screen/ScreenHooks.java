@@ -30,10 +30,13 @@ public class ScreenHooks {
     // isn't set up as a GUI sprite, so use a plain text Button (this entry point is dev-unreachable
     // without Mod Menu and purely opens the controller-setup screen).
     private static Button getButton(Screen parent, int x, int y) {
+        var label = Component.translatable("quadz.config.title");
+        // Width to fit the label (+ padding) so it doesn't scroll/marquee; was hardcoded to 20px.
+        var width = Minecraft.getInstance().font.width(label) + 12;
         return Button.builder(
-                        Component.translatable("quadz.config.title"),
+                        label,
                         button -> Minecraft.getInstance().setScreen(new ControllerSetupScreen(parent)))
-                .bounds(x, y, 20, 20)
+                .bounds(x, y, width, 20)
                 .build();
     }
 
