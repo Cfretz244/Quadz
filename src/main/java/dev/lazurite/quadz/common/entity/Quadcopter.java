@@ -64,10 +64,6 @@ public class Quadcopter extends LivingEntity implements EntityPhysicsElement, Te
     public static final EntityDataAccessor<Integer> BIND_ID = SynchedEntityData.defineId(Quadcopter.class, EntityDataSerializers.INT);
     public static final EntityDataAccessor<Integer> CAMERA_ANGLE = SynchedEntityData.defineId(Quadcopter.class, EntityDataSerializers.INT);
 
-    // Fraction of the template drag coefficient the drone keeps while submerged. Lower = slips
-    // through water more freely (more submersible-like). First-pass value; tune by feel.
-    public static final float UNDERWATER_DRAG_MULTIPLIER = 0.35f;
-
     private final AnimatableInstanceCache cache = GeckoLibUtil.createInstanceCache(this);
     private final EntityRigidBody rigidBody = new EntityRigidBody(this);
     private final QuadcopterView view = new QuadcopterView(this);
@@ -120,15 +116,15 @@ public class Quadcopter extends LivingEntity implements EntityPhysicsElement, Te
                 entity.hurt(this.damageSources().flyIntoWall(), 2.0f);
             });
 
-            // Submersible handling: underwater the drone otherwise bogs down in heavy water drag
-            // (Rayon applies a dense water-drag force to every submerged triangle). While it's in
-            // water, scale its drag coefficient down so it stays maneuverable — the physics analog
-            // of a Depth Strider effect — and restore the template value in air. All Rayon drag
-            // (water + simple) scales by this coefficient, so this one knob loosens it up underwater.
-            TemplateLoader.getTemplateById(this.getTemplate()).ifPresent(template -> {
-                final float baseDrag = template.metadata().get("dragCoefficient").getAsFloat();
-                this.getRigidBody().setDragCoefficient(this.isInWater() ? baseDrag * UNDERWATER_DRAG_MULTIPLIER : baseDrag);
-            });
+            // Submersible handling: underwater the drone otherwise bogs down. Rayon's water drag
+            // applies a mass-based "stopping force" that kills nearly all velocity each step, and it
+            // ignores the drag coefficient once that clamp kicks in — so scaling the coefficient does
+            // nothing you can feel. Instead, turn drag OFF entirely while the drone is in water (this
+            // skips Rayon's whole water-drag block, letting it move freely / "submersible"), and
+            // restore SIMPLE air drag the moment it's back out of the water.
+            this.getRigidBody().setDragType(this.isInWater()
+                    ? ElementRigidBody.DragType.NONE
+                    : ElementRigidBody.DragType.SIMPLE);
         }
 
         Search.forPlayer(this).ifPresentOrElse(player -> {
@@ -282,7 +278,15 @@ public class Quadcopter extends LivingEntity implements EntityPhysicsElement, Te
         super.readAdditionalSaveData(input);
         getEntityData().set(TEMPLATE, input.getStringOr("template", ""));
         getEntityData().set(BIND_ID, input.getIntOr("bind_id", 0));
-        getEntityData().set(CAMERA_ANGLE, input.getIntOr("camera_angle", 0));
+
+        // Restore the saved uptilt across sessions. Setting CAMERA_ANGLE alone isn't enough: on the
+        // first tick after load the template-change handler (ServerEventHooks.onEntityTemplateChanged)
+        // fires — because PREV_TEMPLATE resets to "" — and, finding no pending angle, resets CAMERA_ANGLE
+        // to the template DEFAULT, wiping the loaded value. So we also stage it as the pending angle
+        // (the same channel item placement uses), which that handler consumes instead of the default.
+        final int savedAngle = input.getIntOr("camera_angle", 0);
+        getEntityData().set(CAMERA_ANGLE, savedAngle);
+        setPendingCameraAngle(savedAngle);
     }
 
     @Override
