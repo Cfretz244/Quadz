@@ -43,7 +43,7 @@
   "quadz.config.visuals.fisheye_toggle" : "Fisheye Lens",
   "quadz.config.visuals.fisheye_amount" : "Fisheye Amount",
   "quadz.config.visuals.fpv_fov" : "FPV Field of View",
-  "quadz.config.visuals.fpv_fov.tooltip" : "Camera field of view while flying FPV (90-160°). Higher is wider / more GoPro-like. Overrides the vanilla FOV cap and only affects the drone view.",
+  "quadz.config.visuals.fpv_fov.tooltip" : "Camera field of view while flying FPV (90-130°). Higher is wider / more GoPro-like. Adjust in-flight with the left/right arrow keys. Overrides the vanilla FOV cap and only affects the drone view.",
   "quadz.config.visuals.osd_toggle" : "On Screen Display",
   "quadz.config.visuals.osd_toggle.tooltip" : "Master switch for the FPV overlay. Turn off to hide both the speed readout and the stick overlay.",
   "quadz.config.visuals.speed_display_toggle" : "Speed Readout",
@@ -82,6 +82,8 @@
   "quadz.key.camera_up" : "Increase Camera Uptilt (FPV)",
   "quadz.key.camera_down" : "Decrease Camera Uptilt (FPV)",
   "quadz.key.arm_disarm" : "Arm / Disarm (FPV)",
+  "quadz.key.fov_wider" : "Widen FPV Field of View",
+  "quadz.key.fov_narrower" : "Narrow FPV Field of View",
 
   "quadz.osd.disarmed" : "DISARMED"
 }

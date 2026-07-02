@@ -12,7 +12,7 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 public class CameraMixin {
 
     // Adjustable FPV field of view. While viewing through a quadcopter, override the camera FOV
-    // with the user's configured value (Config.fpvFov, 90-160). In 26.1 the ~110 FOV cap lives in
+    // with the user's configured value (Config.fpvFov, 90-130). In 26.1 the ~110 FOV cap lives in
     // the Options.fov() IntRange, and Camera#calculateFov just reads that already-capped integer;
     // overriding the *result* here is what lets the drone view exceed 110 to mimic a real FPV cam.
     // FOV is a purely client-side render concern (not spectator-synced), so no packet is needed —

@@ -169,8 +169,8 @@ public interface MainConfigScreen {
         );
 
         visualsCategory.addEntry(
-                entryBuilder.startIntSlider(Component.translatable("quadz.config.visuals.fpv_fov"), Config.fpvFov, 90, 160)
-                        .setDefaultValue(120)
+                entryBuilder.startIntSlider(Component.translatable("quadz.config.visuals.fpv_fov"), Config.fpvFov, Config.FPV_FOV_MIN, Config.FPV_FOV_MAX)
+                        .setDefaultValue(110)
                         .setTextGetter(value -> Component.literal(value + "°"))
                         .setTooltip(Component.translatable("quadz.config.visuals.fpv_fov.tooltip"))
                         .setSaveConsumer(value -> Config.fpvFov = value)

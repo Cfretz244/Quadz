@@ -95,6 +95,21 @@ public class ClientEventHooks {
             OnScreenDisplay.flashCameraAngle();
         }
 
+        // FPV field of view: drain the keybind queue and, when viewing through a drone (the only place
+        // the FOV override applies), nudge Config.fpvFov by 1 degree per press — right widens, left
+        // narrows. Client-only value, so we just clamp and persist; no packet needed.
+        var fovDelta = 0;
+        while (QuadzClient.FOV_WIDER.consumeClick()) fovDelta += 1;
+        while (QuadzClient.FOV_NARROWER.consumeClick()) fovDelta -= 1;
+
+        if (fovDelta != 0 && QuadzClient.getQuadcopterFromCamera().isPresent()) {
+            final var clamped = Math.max(Config.FPV_FOV_MIN, Math.min(Config.FPV_FOV_MAX, Config.fpvFov + fovDelta));
+            if (clamped != Config.fpvFov) {
+                Config.fpvFov = clamped;
+                Config.save();
+            }
+        }
+
         // Whether we're currently controlling a drone — via its camera (FPV) or a bound remote (LOS).
         // Arm/disarm works in both, not just FPV.
         final var controlling = controllingQuadcopter();

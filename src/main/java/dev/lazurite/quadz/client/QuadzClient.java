@@ -41,6 +41,11 @@ public class QuadzClient implements ClientModInitializer {
     // Explicit arm/disarm override for the viewed drone (rebindable; default R).
     public static final KeyMapping ARM_DISARM = new KeyMapping(
             "quadz.key.arm_disarm", InputConstants.Type.KEYSYM, GLFW.GLFW_KEY_R, KEY_CATEGORY);
+    // Adjust the FPV field of view in-flight (rebindable; default left = narrower, right = wider).
+    public static final KeyMapping FOV_WIDER = new KeyMapping(
+            "quadz.key.fov_wider", InputConstants.Type.KEYSYM, GLFW.GLFW_KEY_RIGHT, KEY_CATEGORY);
+    public static final KeyMapping FOV_NARROWER = new KeyMapping(
+            "quadz.key.fov_narrower", InputConstants.Type.KEYSYM, GLFW.GLFW_KEY_LEFT, KEY_CATEGORY);
 
     /**
      * Finds the player's quadcopter based on its camera view.
@@ -75,6 +80,8 @@ public class QuadzClient implements ClientModInitializer {
         KeyMappingHelper.registerKeyMapping(CAMERA_UP);
         KeyMappingHelper.registerKeyMapping(CAMERA_DOWN);
         KeyMappingHelper.registerKeyMapping(ARM_DISARM);
+        KeyMappingHelper.registerKeyMapping(FOV_WIDER);
+        KeyMappingHelper.registerKeyMapping(FOV_NARROWER);
 
         // Renderer
         EntityRendererRegistry.register(Quadz.QUADCOPTER, QuadcopterEntityRenderer::new);

@@ -80,9 +80,12 @@ public class Config {
     public static boolean videoInterferenceEnabled = true;
     public static boolean fisheyeEnabled = true;
     public static float fisheyeAmount = 0.8f;
-    // FPV camera field of view in degrees (90-160). Read directly each frame by CameraMixin while
-    // viewing through a quadcopter; overrides (and can exceed) vanilla's ~110 FOV cap. Client-only.
-    public static int fpvFov = 120;
+    // FPV camera field of view in degrees. Read directly each frame by CameraMixin while viewing
+    // through a quadcopter; overrides (and can exceed) vanilla's ~110 FOV cap. Client-only.
+    // Adjustable in-flight via the left/right arrow keys (see ClientEventHooks) and the config slider.
+    public static final int FPV_FOV_MIN = 90;
+    public static final int FPV_FOV_MAX = 130;
+    public static int fpvFov = 110;
 
     public static Path getConfigPath() {
         return FabricLoader.getInstance().getConfigDir().resolve("quadz.json");
@@ -222,7 +225,8 @@ public class Config {
             videoInterferenceEnabled = config.get("videoInterferenceEnabled").getAsBoolean();
             fisheyeEnabled = config.get("fisheyeEnabled").getAsBoolean();
             fisheyeAmount = config.get("fisheyeAmount").getAsFloat();
-            if (config.has("fpvFov")) fpvFov = config.get("fpvFov").getAsInt();
+            // Clamp on load so configs saved under the old wider range snap into the current bounds.
+            if (config.has("fpvFov")) fpvFov = Math.max(FPV_FOV_MIN, Math.min(FPV_FOV_MAX, config.get("fpvFov").getAsInt()));
         } catch(IOException e) {
             Quadz.LOGGER.error(e);
         }
