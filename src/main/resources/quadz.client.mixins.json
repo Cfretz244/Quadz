@@ -4,7 +4,6 @@
   "package": "dev.lazurite.quadz.client.mixin",
   "compatibilityLevel": "JAVA_21",
   "client": [
-    "BiomeAmbientSoundsHandlerMixin",
     "BubbleColumnAmbientSoundHandlerMixin",
     "CameraMixin",
     "CameraTypeMixin",
