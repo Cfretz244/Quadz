@@ -169,6 +169,15 @@ public interface MainConfigScreen {
         );
 
         visualsCategory.addEntry(
+                entryBuilder.startIntSlider(Component.translatable("quadz.config.visuals.fpv_fov"), Config.fpvFov, 90, 160)
+                        .setDefaultValue(120)
+                        .setTextGetter(value -> Component.literal(value + "°"))
+                        .setTooltip(Component.translatable("quadz.config.visuals.fpv_fov.tooltip"))
+                        .setSaveConsumer(value -> Config.fpvFov = value)
+                        .build()
+        );
+
+        visualsCategory.addEntry(
                 entryBuilder.startBooleanToggle(Component.translatable("quadz.config.visuals.camera_in_center_toggle"), Config.renderCameraInCenter)
                         .setDefaultValue(Config.renderCameraInCenter)
                         .setSaveConsumer(value -> Config.renderCameraInCenter = value)
