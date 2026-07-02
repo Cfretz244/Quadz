@@ -79,6 +79,12 @@ public class QuadcopterView extends View implements View.Ticking {
             this.osd.renderCameraAngle(guiGraphics, tickDelta);
         }
 
+        // FOV readout: same rules as the camera-angle one — persistent when enabled (+ master OSD),
+        // and flashes briefly on adjustment regardless, so the value shows the moment you change it.
+        if ((Config.osdEnabled && Config.fovDisplayEnabled) || OnScreenDisplay.isFovFlashing()) {
+            this.osd.renderFov(guiGraphics, tickDelta);
+        }
+
         // Disarmed warning follows the master OSD toggle (per tester request).
         if (Config.osdEnabled) {
             this.osd.renderDisarmed(guiGraphics, tickDelta);

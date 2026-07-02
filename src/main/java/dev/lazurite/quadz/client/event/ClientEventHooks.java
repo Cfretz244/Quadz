@@ -108,6 +108,8 @@ public class ClientEventHooks {
                 Config.fpvFov = clamped;
                 Config.save();
             }
+            // Briefly surface the FOV readout even when its toggle is off, so the pilot sees it change.
+            OnScreenDisplay.flashFov();
         }
 
         // Whether we're currently controlling a drone — via its camera (FPV) or a bound remote (LOS).

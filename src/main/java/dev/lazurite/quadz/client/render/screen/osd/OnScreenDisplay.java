@@ -13,11 +13,13 @@ import net.minecraft.resources.Identifier;
 
 public class OnScreenDisplay {
 
-    // When the camera-angle readout is toggled off it still flashes briefly while the angle is
-    // being adjusted, fading out over the tail of the window. Timer is in client ticks (20/sec).
-    private static final int FLASH_DURATION = 40;    // how long the readout stays up after a change
+    // When a readout is toggled off it still flashes briefly while its value is being adjusted,
+    // fading out over the tail of the window. Timers are in client ticks (20/sec). The camera-angle
+    // and FOV readouts flash independently, since they respond to different keys/events.
+    private static final int FLASH_DURATION = 40;    // how long a readout stays up after a change
     private static final int FLASH_FADE_TICKS = 12;  // how long it spends fading out at the end
     private static int flashTicks = 0;
+    private static int fovFlashTicks = 0;
 
     private final Quadcopter quadcopter;
     private final Font font;
@@ -27,15 +29,27 @@ public class OnScreenDisplay {
         flashTicks = FLASH_DURATION;
     }
 
-    /** Decrement the flash timer; call once per client tick. */
+    /** Show the FOV readout briefly (used when its toggle is off and the FOV changes). */
+    public static void flashFov() {
+        fovFlashTicks = FLASH_DURATION;
+    }
+
+    /** Decrement the flash timers; call once per client tick. */
     public static void tickFlash() {
         if (flashTicks > 0) {
             flashTicks--;
+        }
+        if (fovFlashTicks > 0) {
+            fovFlashTicks--;
         }
     }
 
     public static boolean isCameraAngleFlashing() {
         return flashTicks > 0;
+    }
+
+    public static boolean isFovFlashing() {
+        return fovFlashTicks > 0;
     }
 
     public OnScreenDisplay(Quadcopter quadcopter) {
@@ -65,6 +79,26 @@ public class OnScreenDisplay {
         final int alpha = persistent
                 ? 0xFF
                 : (int) (0xFF * Math.min(1.0f, flashTicks / (float) FLASH_FADE_TICKS));
+        if (alpha <= 0) {
+            return;
+        }
+
+        guiGraphics.text(font, text, 25, height, (alpha << 24) | 0xFFFFFF, true);
+    }
+
+    public void renderFov(GuiGraphicsExtractor guiGraphics, float tickDelta) {
+        var client = Minecraft.getInstance();
+        // Sits one line above the camera-angle readout (which is at height-37).
+        var height = client.getWindow().getGuiScaledHeight() - 49;
+        // Labeled ("FOV 120°") so it reads distinctly from the bare uptilt-angle value below it.
+        final var text = Component.translatable("quadz.osd.fov", Config.fpvFov);
+
+        // Same persistent-vs-flash logic as the camera-angle readout: full opacity when its toggle
+        // is on (and master OSD on), otherwise fade out over the tail of its own flash window.
+        final boolean persistent = Config.osdEnabled && Config.fovDisplayEnabled;
+        final int alpha = persistent
+                ? 0xFF
+                : (int) (0xFF * Math.min(1.0f, fovFlashTicks / (float) FLASH_FADE_TICKS));
         if (alpha <= 0) {
             return;
         }

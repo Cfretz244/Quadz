@@ -52,6 +52,8 @@
   "quadz.config.visuals.stick_display_toggle.tooltip" : "Show the gimbal/stick position indicators at the bottom of the FPV view.",
   "quadz.config.visuals.camera_angle_display_toggle" : "Camera Angle Readout",
   "quadz.config.visuals.camera_angle_display_toggle.tooltip" : "Show the camera uptilt angle in the FPV view. When off, it still flashes briefly while you adjust the angle.",
+  "quadz.config.visuals.fov_display_toggle" : "FOV Readout",
+  "quadz.config.visuals.fov_display_toggle.tooltip" : "Show the FPV field of view in the drone view. When off, it still flashes briefly while you adjust the FOV.",
   "quadz.config.visuals.stick_scale" : "Stick Overlay Size",
   "quadz.config.visuals.stick_scale.tooltip" : "Relative size of the stick overlay (100% is the default size).",
   "quadz.config.visuals.follow_los_toggle" : "Line of Sight Following",
@@ -85,5 +87,6 @@
   "quadz.key.fov_wider" : "Widen FPV Field of View",
   "quadz.key.fov_narrower" : "Narrow FPV Field of View",
 
+  "quadz.osd.fov" : "FOV %s°",
   "quadz.osd.disarmed" : "DISARMED"
 }

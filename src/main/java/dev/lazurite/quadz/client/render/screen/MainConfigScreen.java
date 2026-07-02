@@ -124,6 +124,14 @@ public interface MainConfigScreen {
         );
 
         visualsCategory.addEntry(
+                entryBuilder.startBooleanToggle(Component.translatable("quadz.config.visuals.fov_display_toggle"), Config.fovDisplayEnabled)
+                        .setDefaultValue(Config.fovDisplayEnabled)
+                        .setTooltip(Component.translatable("quadz.config.visuals.fov_display_toggle.tooltip"))
+                        .setSaveConsumer(value -> Config.fovDisplayEnabled = value)
+                        .build()
+        );
+
+        visualsCategory.addEntry(
                 entryBuilder.startIntSlider(Component.translatable("quadz.config.visuals.stick_scale"), Math.round(Config.stickScale * 100), 15, 200)
                         .setDefaultValue(100)
                         .setTextGetter(value -> Component.literal(value + "%"))
