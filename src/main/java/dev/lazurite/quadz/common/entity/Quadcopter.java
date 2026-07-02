@@ -64,6 +64,11 @@ public class Quadcopter extends LivingEntity implements EntityPhysicsElement, Te
     public static final EntityDataAccessor<Integer> BIND_ID = SynchedEntityData.defineId(Quadcopter.class, EntityDataSerializers.INT);
     public static final EntityDataAccessor<Integer> CAMERA_ANGLE = SynchedEntityData.defineId(Quadcopter.class, EntityDataSerializers.INT);
 
+    // Underwater the drone uses the SIMPLE air-drag term at this fraction of its in-air strength
+    // (with Rayon's heavy water drag suppressed), so water feels like a damped version of normal
+    // flight rather than molasses or frictionless. First-pass value; tune by feel.
+    public static final float UNDERWATER_AIR_DRAG_FRACTION = 0.5f;
+
     private final AnimatableInstanceCache cache = GeckoLibUtil.createInstanceCache(this);
     private final EntityRigidBody rigidBody = new EntityRigidBody(this);
     private final QuadcopterView view = new QuadcopterView(this);
@@ -75,6 +80,10 @@ public class Quadcopter extends LivingEntity implements EntityPhysicsElement, Te
     // Server-side, transient: a camera angle to restore on placement (from a picked-up drone item),
     // honored by ServerEventHooks.onEntityTemplateChanged instead of the template default. Consumed once.
     private Integer pendingCameraAngle = null;
+
+    // Server-side, transient: last tick's submersion state, so we only reconfigure the body's drag on
+    // a water<->air transition instead of every tick (setDragCoefficient re-dirties body properties).
+    private boolean wasInWater = false;
 
     public Quadcopter(EntityType<? extends LivingEntity> entityType, Level level) {
         super(entityType, level);
@@ -116,15 +125,22 @@ public class Quadcopter extends LivingEntity implements EntityPhysicsElement, Te
                 entity.hurt(this.damageSources().flyIntoWall(), 2.0f);
             });
 
-            // Submersible handling: underwater the drone otherwise bogs down. Rayon's water drag
-            // applies a mass-based "stopping force" that kills nearly all velocity each step, and it
-            // ignores the drag coefficient once that clamp kicks in — so scaling the coefficient does
-            // nothing you can feel. Instead, turn drag OFF entirely while the drone is in water (this
-            // skips Rayon's whole water-drag block, letting it move freely / "submersible"), and
-            // restore SIMPLE air drag the moment it's back out of the water.
-            this.getRigidBody().setDragType(this.isInWater()
-                    ? ElementRigidBody.DragType.NONE
-                    : ElementRigidBody.DragType.SIMPLE);
+            // Submersible handling: underwater the drone should feel like a damped version of normal
+            // flight — not molasses (full water drag) and not frictionless. Rayon's water drag ignores
+            // the drag coefficient once its mass-based stopping-force clamp kicks in, so we suppress the
+            // water drag entirely (waterDragScale 0) and instead lean on the SIMPLE air-drag term at a
+            // reduced coefficient, giving ~UNDERWATER_AIR_DRAG_FRACTION of the in-air drag. Out of water
+            // we restore full water drag and the template coefficient. Body stays on DragType.SIMPLE
+            // throughout; we only touch the setters on a transition (setDragCoefficient re-dirties props).
+            final boolean inWater = this.isInWater();
+            if (inWater != this.wasInWater) {
+                TemplateLoader.getTemplateById(this.getTemplate()).ifPresent(template -> {
+                    final float baseDrag = template.metadata().get("dragCoefficient").getAsFloat();
+                    this.getRigidBody().setWaterDragScale(inWater ? 0.0f : 1.0f);
+                    this.getRigidBody().setDragCoefficient(inWater ? baseDrag * UNDERWATER_AIR_DRAG_FRACTION : baseDrag);
+                });
+                this.wasInWater = inWater;
+            }
         }
 
         Search.forPlayer(this).ifPresentOrElse(player -> {
