@@ -4,8 +4,10 @@
   "package": "dev.lazurite.quadz.client.mixin",
   "compatibilityLevel": "JAVA_21",
   "client": [
+    "BubbleColumnAmbientSoundHandlerMixin",
     "CameraMixin",
     "CameraTypeMixin",
+    "UnderwaterAmbientSoundHandlerMixin",
     "GameRendererMixin",
     "MinecraftMixin",
     "PauseScreenMixin",

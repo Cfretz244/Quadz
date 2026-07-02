@@ -67,7 +67,7 @@ public class Quadcopter extends LivingEntity implements EntityPhysicsElement, Te
     // Underwater the drone uses the SIMPLE air-drag term at this fraction of its in-air strength
     // (with Rayon's heavy water drag suppressed), so water feels like a damped version of normal
     // flight rather than molasses or frictionless. First-pass value; tune by feel.
-    public static final float UNDERWATER_AIR_DRAG_FRACTION = 0.5f;
+    public static final float UNDERWATER_AIR_DRAG_FRACTION = 0.15f;
 
     private final AnimatableInstanceCache cache = GeckoLibUtil.createInstanceCache(this);
     private final EntityRigidBody rigidBody = new EntityRigidBody(this);
