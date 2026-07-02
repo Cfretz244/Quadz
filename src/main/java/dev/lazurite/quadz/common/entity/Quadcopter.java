@@ -64,6 +64,10 @@ public class Quadcopter extends LivingEntity implements EntityPhysicsElement, Te
     public static final EntityDataAccessor<Integer> BIND_ID = SynchedEntityData.defineId(Quadcopter.class, EntityDataSerializers.INT);
     public static final EntityDataAccessor<Integer> CAMERA_ANGLE = SynchedEntityData.defineId(Quadcopter.class, EntityDataSerializers.INT);
 
+    // Fraction of the template drag coefficient the drone keeps while submerged. Lower = slips
+    // through water more freely (more submersible-like). First-pass value; tune by feel.
+    public static final float UNDERWATER_DRAG_MULTIPLIER = 0.35f;
+
     private final AnimatableInstanceCache cache = GeckoLibUtil.createInstanceCache(this);
     private final EntityRigidBody rigidBody = new EntityRigidBody(this);
     private final QuadcopterView view = new QuadcopterView(this);
@@ -114,6 +118,16 @@ public class Quadcopter extends LivingEntity implements EntityPhysicsElement, Te
             // Hurt entities on collision
             this.level().getEntities(this, this.getBoundingBox(), entity -> entity instanceof LivingEntity).forEach(entity -> {
                 entity.hurt(this.damageSources().flyIntoWall(), 2.0f);
+            });
+
+            // Submersible handling: underwater the drone otherwise bogs down in heavy water drag
+            // (Rayon applies a dense water-drag force to every submerged triangle). While it's in
+            // water, scale its drag coefficient down so it stays maneuverable — the physics analog
+            // of a Depth Strider effect — and restore the template value in air. All Rayon drag
+            // (water + simple) scales by this coefficient, so this one knob loosens it up underwater.
+            TemplateLoader.getTemplateById(this.getTemplate()).ifPresent(template -> {
+                final float baseDrag = template.metadata().get("dragCoefficient").getAsFloat();
+                this.getRigidBody().setDragCoefficient(this.isInWater() ? baseDrag * UNDERWATER_DRAG_MULTIPLIER : baseDrag);
             });
         }
 
