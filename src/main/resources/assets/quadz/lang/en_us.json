@@ -18,6 +18,7 @@
   "quadz.config.controller.superRate" : "Super Rate",
   "quadz.config.controller.expo" : "Expo",
   "quadz.config.controller.deadzone" : "Deadzone",
+  "quadz.config.controller.rate_curve" : "Rate Curve",
   "quadz.config.controller.rate_profile" : "Rate Profile",
   "quadz.config.controller.rate_profile.tooltip" : "Which rate system the sticks use. Each profile has its own curve, its own names for the values below, and remembers its own values — pick one and the fields switch instantly.",
   "quadz.config.controller.rate_profile.betaflight" : "Betaflight",

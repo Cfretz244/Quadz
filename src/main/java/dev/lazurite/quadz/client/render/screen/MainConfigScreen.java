@@ -8,9 +8,14 @@ import me.shedaniel.clothconfig2.api.ConfigBuilder;
 import me.shedaniel.clothconfig2.api.ConfigCategory;
 import me.shedaniel.clothconfig2.api.ConfigEntryBuilder;
 import me.shedaniel.clothconfig2.api.Requirement;
+import me.shedaniel.clothconfig2.gui.entries.FloatListEntry;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.network.chat.Component;
+
+import java.util.ArrayList;
+import java.util.List;
+import java.util.function.Supplier;
 
 public interface MainConfigScreen {
 
@@ -61,6 +66,13 @@ public interface MainConfigScreen {
                         .build();
         controllerCategory.addEntry(linkEntry);
 
+        // Field-entry refs, so the rate-curve graph below can read live (in-progress) values.
+        // [profile][param 0=rate,1=superRate,2=expo] for the linked (shared) fields; and
+        // [profile][axis 0=pitch,1=yaw,2=roll][param] for the unlinked per-axis fields.
+        final int nProfiles = RateProfile.values().length;
+        final FloatListEntry[][] sharedFields = new FloatListEntry[nProfiles][3];
+        final FloatListEntry[][][] axisFields = new FloatListEntry[nProfiles][3][3];
+
         for (RateProfile profile : RateProfile.values()) {
             final int i = profile.ordinal();
             final var thisProfile = Requirement.isValue(profileEntry, profile);
@@ -68,21 +80,50 @@ public interface MainConfigScreen {
             final var unlinked = Requirement.all(thisProfile, Requirement.isFalse(linkEntry));
 
             // Linked: one shared set per profile.
-            addRateField(controllerCategory, entryBuilder, Component.translatable(profile.rateKey()),      Config.rates,      Config.DEFAULT_RATES,      i, linked);
-            addRateField(controllerCategory, entryBuilder, Component.translatable(profile.superRateKey()), Config.superRates, Config.DEFAULT_SUPER_RATES, i, linked);
-            addRateField(controllerCategory, entryBuilder, Component.translatable(profile.expoKey()),      Config.expos,      Config.DEFAULT_EXPOS,      i, linked);
+            sharedFields[i][0] = addRateField(controllerCategory, entryBuilder, Component.translatable(profile.rateKey()),      Config.rates,      Config.DEFAULT_RATES,      i, linked);
+            sharedFields[i][1] = addRateField(controllerCategory, entryBuilder, Component.translatable(profile.superRateKey()), Config.superRates, Config.DEFAULT_SUPER_RATES, i, linked);
+            sharedFields[i][2] = addRateField(controllerCategory, entryBuilder, Component.translatable(profile.expoKey()),      Config.expos,      Config.DEFAULT_EXPOS,      i, linked);
 
             // Unlinked: independent pitch / yaw / roll sets, each labelled "<Axis> <field name>".
-            addRateField(controllerCategory, entryBuilder, axisLabel("pitch", profile.rateKey()),      Config.pitchRates,      Config.DEFAULT_RATES,      i, unlinked);
-            addRateField(controllerCategory, entryBuilder, axisLabel("pitch", profile.superRateKey()), Config.pitchSuperRates, Config.DEFAULT_SUPER_RATES, i, unlinked);
-            addRateField(controllerCategory, entryBuilder, axisLabel("pitch", profile.expoKey()),      Config.pitchExpos,      Config.DEFAULT_EXPOS,      i, unlinked);
-            addRateField(controllerCategory, entryBuilder, axisLabel("yaw",   profile.rateKey()),      Config.yawRates,        Config.DEFAULT_RATES,      i, unlinked);
-            addRateField(controllerCategory, entryBuilder, axisLabel("yaw",   profile.superRateKey()), Config.yawSuperRates,   Config.DEFAULT_SUPER_RATES, i, unlinked);
-            addRateField(controllerCategory, entryBuilder, axisLabel("yaw",   profile.expoKey()),      Config.yawExpos,        Config.DEFAULT_EXPOS,      i, unlinked);
-            addRateField(controllerCategory, entryBuilder, axisLabel("roll",  profile.rateKey()),      Config.rollRates,       Config.DEFAULT_RATES,      i, unlinked);
-            addRateField(controllerCategory, entryBuilder, axisLabel("roll",  profile.superRateKey()), Config.rollSuperRates,  Config.DEFAULT_SUPER_RATES, i, unlinked);
-            addRateField(controllerCategory, entryBuilder, axisLabel("roll",  profile.expoKey()),      Config.rollExpos,       Config.DEFAULT_EXPOS,      i, unlinked);
+            axisFields[i][0][0] = addRateField(controllerCategory, entryBuilder, axisLabel("pitch", profile.rateKey()),      Config.pitchRates,      Config.DEFAULT_RATES,      i, unlinked);
+            axisFields[i][0][1] = addRateField(controllerCategory, entryBuilder, axisLabel("pitch", profile.superRateKey()), Config.pitchSuperRates, Config.DEFAULT_SUPER_RATES, i, unlinked);
+            axisFields[i][0][2] = addRateField(controllerCategory, entryBuilder, axisLabel("pitch", profile.expoKey()),      Config.pitchExpos,      Config.DEFAULT_EXPOS,      i, unlinked);
+            axisFields[i][1][0] = addRateField(controllerCategory, entryBuilder, axisLabel("yaw",   profile.rateKey()),      Config.yawRates,        Config.DEFAULT_RATES,      i, unlinked);
+            axisFields[i][1][1] = addRateField(controllerCategory, entryBuilder, axisLabel("yaw",   profile.superRateKey()), Config.yawSuperRates,   Config.DEFAULT_SUPER_RATES, i, unlinked);
+            axisFields[i][1][2] = addRateField(controllerCategory, entryBuilder, axisLabel("yaw",   profile.expoKey()),      Config.yawExpos,        Config.DEFAULT_EXPOS,      i, unlinked);
+            axisFields[i][2][0] = addRateField(controllerCategory, entryBuilder, axisLabel("roll",  profile.rateKey()),      Config.rollRates,       Config.DEFAULT_RATES,      i, unlinked);
+            axisFields[i][2][1] = addRateField(controllerCategory, entryBuilder, axisLabel("roll",  profile.superRateKey()), Config.rollSuperRates,  Config.DEFAULT_SUPER_RATES, i, unlinked);
+            axisFields[i][2][2] = addRateField(controllerCategory, entryBuilder, axisLabel("roll",  profile.expoKey()),      Config.rollExpos,       Config.DEFAULT_EXPOS,      i, unlinked);
         }
+
+        // Live rate-curve graph: reads the selected profile + link state + the field entries above,
+        // recomputing each frame so it redraws as the pilot tunes. Linked → one white curve; unlinked
+        // → pitch/yaw/roll in three colours.
+        final Supplier<List<RateCurveGraphEntry.CurveSpec>> curveSupplier = () -> {
+            final RateProfile p = profileEntry.getValue();
+            if (p == null) {
+                return List.of();
+            }
+            final int pi = p.ordinal();
+            final Boolean linkedVal = linkEntry.getValue();
+            final boolean linked = linkedVal == null || linkedVal;
+            final List<RateCurveGraphEntry.CurveSpec> list = new ArrayList<>();
+            if (linked) {
+                list.add(new RateCurveGraphEntry.CurveSpec(p,
+                        liveVal(sharedFields[pi][0]), liveVal(sharedFields[pi][1]), liveVal(sharedFields[pi][2]),
+                        0xFFFFFFFF, "All"));
+            } else {
+                final int[] colors = { 0xFFFF6B6B, 0xFF6BD46B, 0xFF6BAAFF };
+                final String[] names = { "Pitch", "Yaw", "Roll" };
+                for (int a = 0; a < 3; a++) {
+                    list.add(new RateCurveGraphEntry.CurveSpec(p,
+                            liveVal(axisFields[pi][a][0]), liveVal(axisFields[pi][a][1]), liveVal(axisFields[pi][a][2]),
+                            colors[a], names[a]));
+                }
+            }
+            return list;
+        };
+        controllerCategory.addEntry(new RateCurveGraphEntry(Component.translatable("quadz.config.controller.rate_curve"), curveSupplier));
 
         controllerCategory.addEntry(
                 entryBuilder.startFloatField(Component.translatable("quadz.config.controller.deadzone"), Config.deadzone)
@@ -213,15 +254,28 @@ public interface MainConfigScreen {
         return builder.build();
     }
 
-    /** Adds one float rate field bound to {@code store[i]}, shown only when {@code displayRequirement} holds. */
-    private static void addRateField(ConfigCategory category, ConfigEntryBuilder entryBuilder, Component label, float[] store, float[] defaults, int i, Requirement displayRequirement) {
-        category.addEntry(
-                entryBuilder.startFloatField(label, store[i])
-                        .setDefaultValue(defaults[i])
-                        .setDisplayRequirement(displayRequirement)
-                        .setSaveConsumer(value -> store[i] = value)
-                        .build()
-        );
+    /**
+     * Adds one float rate field bound to {@code store[i]}, shown only when {@code displayRequirement}
+     * holds. Returns the built entry so the rate-curve graph can read its live (in-progress) value.
+     */
+    private static FloatListEntry addRateField(ConfigCategory category, ConfigEntryBuilder entryBuilder, Component label, float[] store, float[] defaults, int i, Requirement displayRequirement) {
+        var entry = entryBuilder.startFloatField(label, store[i])
+                .setDefaultValue(defaults[i])
+                .setDisplayRequirement(displayRequirement)
+                .setSaveConsumer(value -> store[i] = value)
+                .build();
+        category.addEntry(entry);
+        return entry;
+    }
+
+    /** Live value of a rate field, guarded against a null/mid-edit-invalid parse. */
+    private static double liveVal(FloatListEntry entry) {
+        try {
+            Float f = entry.getValue();
+            return f == null ? 0.0 : f.doubleValue();
+        } catch (Exception e) {
+            return 0.0;
+        }
     }
 
     /** "<Axis> <field name>", e.g. "Pitch RC Rate" — axis prefix joined to the profile's field label. */
