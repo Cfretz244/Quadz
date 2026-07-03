@@ -18,6 +18,8 @@ public class OnScreenDisplay {
     // and FOV readouts flash independently, since they respond to different keys/events.
     private static final int FLASH_DURATION = 40;    // how long a readout stays up after a change
     private static final int FLASH_FADE_TICKS = 12;  // how long it spends fading out at the end
+    // Coordinate readout is drawn at this fraction of the normal font size (tester preference).
+    private static final float COORDS_TEXT_SCALE = 0.5f;
     private static int flashTicks = 0;
     private static int fovFlashTicks = 0;
 
@@ -75,7 +77,14 @@ public class OnScreenDisplay {
         final long y = Math.round(quadcopter.getY());
         final long z = Math.round(quadcopter.getZ());
         final var text = Component.literal(x + " | " + y + " | " + z);
-        guiGraphics.text(font, text, 25, height, 0xFFFFFFFF, true);
+        // Draw at half size: translate to the anchor, scale the pose, then draw at the origin so the
+        // readout's top-left stays pinned at (25, height) regardless of the scale factor.
+        var pose = guiGraphics.pose();
+        pose.pushMatrix();
+        pose.translate(25.0f, (float) height);
+        pose.scale(COORDS_TEXT_SCALE, COORDS_TEXT_SCALE);
+        guiGraphics.text(font, text, 0, 0, 0xFFFFFFFF, true);
+        pose.popMatrix();
     }
 
     public void renderCameraAngle(GuiGraphicsExtractor guiGraphics, float tickDelta) {
