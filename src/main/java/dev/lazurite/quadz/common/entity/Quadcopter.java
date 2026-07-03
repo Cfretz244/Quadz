@@ -92,8 +92,8 @@ public class Quadcopter extends LivingEntity implements EntityPhysicsElement, Te
     // honored by ServerEventHooks.onEntityTemplateChanged instead of the template default. Consumed once.
     private Integer pendingCameraAngle = null;
 
-    // Server-side, transient: last tick's submersion state, so we only reconfigure the body's drag on
-    // a water<->air transition instead of every tick (setDragCoefficient re-dirties body properties).
+    // Transient: last tick's submersion state, used to fire the water->air exit splash on the edge.
+    // (Drag reconfiguration is level-triggered, not edge-triggered — see tick().)
     private boolean wasInWater = false;
 
     public Quadcopter(EntityType<? extends LivingEntity> entityType, Level level) {
@@ -135,38 +135,45 @@ public class Quadcopter extends LivingEntity implements EntityPhysicsElement, Te
             this.level().getEntities(this, this.getBoundingBox(), entity -> entity instanceof LivingEntity).forEach(entity -> {
                 entity.hurt(this.damageSources().flyIntoWall(), 2.0f);
             });
+        }
 
-            // Submersible handling: underwater the drone should feel like a damped version of normal
-            // flight — not molasses (full water drag) and not frictionless. Rayon's water drag ignores
-            // the drag coefficient once its mass-based stopping-force clamp kicks in, so we suppress the
-            // water drag entirely (waterDragScale 0) and instead lean on the SIMPLE air-drag term scaled
-            // to UNDERWATER_DRAG_MULTIPLIER of the in-air drag. Out of water
-            // we restore full water drag and the template coefficient. Body stays on DragType.SIMPLE
-            // throughout; we only touch the setters on a transition (setDragCoefficient re-dirties props).
-            final boolean inWater = this.isInWater();
-            if (inWater != this.wasInWater) {
-                TemplateLoader.getTemplateById(this.getTemplate()).ifPresent(template -> {
-                    final float baseDrag = template.metadata().get("dragCoefficient").getAsFloat();
-                    this.getRigidBody().setWaterDragScale(inWater ? 0.0f : 1.0f);
-                    this.getRigidBody().setDragCoefficient(inWater ? baseDrag * UNDERWATER_DRAG_MULTIPLIER : baseDrag);
-                });
-
-                // Splash on EXIT too (vanilla only splashes on water ENTRY). On a water->air transition
-                // play the same generic splash the entry uses, at the drone. Server-side, so it
-                // broadcasts to the pilot exactly like the entry splash.
-                if (!inWater) {
-                    this.playSound(SoundEvents.GENERIC_SPLASH, 0.8f,
-                            1.0f + (this.getRandom().nextFloat() - this.getRandom().nextFloat()) * 0.4f);
-                }
-
-                this.wasInWater = inWater;
+        // Submersible drag reconfiguration. Underwater we suppress Rayon's heavy per-triangle water drag
+        // (waterDragScale 0) and instead scale the SIMPLE central drag to UNDERWATER_DRAG_MULTIPLIER of
+        // the in-air value; in air we restore both. This is LEVEL-triggered and runs on BOTH physics
+        // sides (like the buoyancy/thrust forces), which matters: the pilot renders their own
+        // client-authoritative sim, and the old server-only + edge-triggered version could leave the
+        // coefficient STUCK at the underwater value after a water dip or a rejoin (a missed edge never
+        // retried) — which showed up as the drone's air top speed being wrong (~sqrt(MULTIPLIER) off,
+        // e.g. the intermittent 300-vs-120 mph). Setting from the CURRENT water state every tick can't
+        // get stuck; we only write when the value actually changes, so we don't re-dirty (and re-
+        // broadcast) properties each tick.
+        final boolean inWater = this.isInWater();
+        TemplateLoader.getTemplateById(this.getTemplate()).ifPresent(template -> {
+            final float baseDrag = template.metadata().get("dragCoefficient").getAsFloat();
+            final float targetDrag = inWater ? baseDrag * UNDERWATER_DRAG_MULTIPLIER : baseDrag;
+            final float targetScale = inWater ? 0.0f : 1.0f;
+            if (this.getRigidBody().getDragCoefficient() != targetDrag) {
+                this.getRigidBody().setDragCoefficient(targetDrag);
             }
+            if (this.getRigidBody().getWaterDragScale() != targetScale) {
+                this.getRigidBody().setWaterDragScale(targetScale);
+            }
+        });
+
+        // Splash on the water->air EDGE (vanilla only splashes on ENTRY). Server-side so it broadcasts
+        // to the pilot exactly like the entry splash.
+        if (inWater != this.wasInWater) {
+            if (!inWater && !this.level().isClientSide()) {
+                this.playSound(SoundEvents.GENERIC_SPLASH, 0.8f,
+                        1.0f + (this.getRandom().nextFloat() - this.getRandom().nextFloat()) * 0.4f);
+            }
+            this.wasInWater = inWater;
         }
 
         // Partial buoyancy: while submerged, apply a smooth upward central force = weight * fraction so
         // the drone sinks slower than in air (but still sinks). Runs on BOTH sides (not gated by
         // isClientSide, like thrust) so the pilot's client-rendered sim gets it. Central => no torque.
-        if (this.isInWater() && UNDERWATER_BUOYANCY_FRACTION > 0.0f) {
+        if (inWater && UNDERWATER_BUOYANCY_FRACTION > 0.0f) {
             final float lift = this.getRigidBody().getMass() * SPACE_GRAVITY * UNDERWATER_BUOYANCY_FRACTION;
             if (Float.isFinite(lift)) {
                 this.getRigidBody().applyCentralForce(new Vector3f(0.0f, lift, 0.0f));
