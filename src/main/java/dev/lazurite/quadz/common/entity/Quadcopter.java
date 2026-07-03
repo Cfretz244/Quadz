@@ -64,10 +64,11 @@ public class Quadcopter extends LivingEntity implements EntityPhysicsElement, Te
     public static final EntityDataAccessor<Integer> BIND_ID = SynchedEntityData.defineId(Quadcopter.class, EntityDataSerializers.INT);
     public static final EntityDataAccessor<Integer> CAMERA_ANGLE = SynchedEntityData.defineId(Quadcopter.class, EntityDataSerializers.INT);
 
-    // Underwater the drone uses the SIMPLE air-drag term at this fraction of its in-air strength
-    // (with Rayon's heavy water drag suppressed), so water feels like a damped version of normal
-    // flight rather than molasses or frictionless. First-pass value; tune by feel.
-    public static final float UNDERWATER_AIR_DRAG_FRACTION = 0.75f;
+    // Underwater the drone uses the SIMPLE (smooth, central) drag term scaled to this MULTIPLE of its
+    // in-air drag strength, with Rayon's heavy per-triangle water drag suppressed. >1.0 means water is
+    // draggier than air (natural — otherwise the drone accelerates harder and tops out FASTER
+    // underwater than in air, since drag is its only speed limiter). Feel knob; tune by feel.
+    public static final float UNDERWATER_DRAG_MULTIPLIER = 1.5f;
 
     // Partial underwater buoyancy: fraction of the drone's weight counteracted by an upward force while
     // submerged, so it sinks SLOWER than it would fall through air but still sinks (< 1.0 = still net
@@ -137,8 +138,8 @@ public class Quadcopter extends LivingEntity implements EntityPhysicsElement, Te
             // Submersible handling: underwater the drone should feel like a damped version of normal
             // flight — not molasses (full water drag) and not frictionless. Rayon's water drag ignores
             // the drag coefficient once its mass-based stopping-force clamp kicks in, so we suppress the
-            // water drag entirely (waterDragScale 0) and instead lean on the SIMPLE air-drag term at a
-            // reduced coefficient, giving ~UNDERWATER_AIR_DRAG_FRACTION of the in-air drag. Out of water
+            // water drag entirely (waterDragScale 0) and instead lean on the SIMPLE air-drag term scaled
+            // to UNDERWATER_DRAG_MULTIPLIER of the in-air drag. Out of water
             // we restore full water drag and the template coefficient. Body stays on DragType.SIMPLE
             // throughout; we only touch the setters on a transition (setDragCoefficient re-dirties props).
             final boolean inWater = this.isInWater();
@@ -146,7 +147,7 @@ public class Quadcopter extends LivingEntity implements EntityPhysicsElement, Te
                 TemplateLoader.getTemplateById(this.getTemplate()).ifPresent(template -> {
                     final float baseDrag = template.metadata().get("dragCoefficient").getAsFloat();
                     this.getRigidBody().setWaterDragScale(inWater ? 0.0f : 1.0f);
-                    this.getRigidBody().setDragCoefficient(inWater ? baseDrag * UNDERWATER_AIR_DRAG_FRACTION : baseDrag);
+                    this.getRigidBody().setDragCoefficient(inWater ? baseDrag * UNDERWATER_DRAG_MULTIPLIER : baseDrag);
                 });
                 this.wasInWater = inWater;
             }
