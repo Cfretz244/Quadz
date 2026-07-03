@@ -48,6 +48,8 @@
   "quadz.config.visuals.osd_toggle.tooltip" : "Master switch for the FPV overlay. Turn off to hide both the speed readout and the stick overlay.",
   "quadz.config.visuals.speed_display_toggle" : "Speed Readout",
   "quadz.config.visuals.speed_display_toggle.tooltip" : "Show the drone's speed in the corner of the FPV view.",
+  "quadz.config.visuals.coords_display_toggle" : "Coordinates Readout",
+  "quadz.config.visuals.coords_display_toggle.tooltip" : "Show the drone's XYZ block coordinates just below the speed readout.",
   "quadz.config.visuals.stick_display_toggle" : "Stick Overlay",
   "quadz.config.visuals.stick_display_toggle.tooltip" : "Show the gimbal/stick position indicators at the bottom of the FPV view.",
   "quadz.config.visuals.camera_angle_display_toggle" : "Camera Angle Readout",

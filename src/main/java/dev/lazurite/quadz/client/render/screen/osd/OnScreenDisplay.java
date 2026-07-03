@@ -66,6 +66,18 @@ public class OnScreenDisplay {
         guiGraphics.text(font, velocity, 25, height, 0xFFFFFFFF, true);
     }
 
+    /** Drone XYZ block coordinates, one line below the speed readout. Format: "X | Y | Z". */
+    public void renderCoords(GuiGraphicsExtractor guiGraphics, float tickDelta) {
+        var client = Minecraft.getInstance();
+        // Sits one line below the speed readout (which is at height-25).
+        var height = client.getWindow().getGuiScaledHeight() - 13;
+        final long x = Math.round(quadcopter.getX());
+        final long y = Math.round(quadcopter.getY());
+        final long z = Math.round(quadcopter.getZ());
+        final var text = Component.literal(x + " | " + y + " | " + z);
+        guiGraphics.text(font, text, 25, height, 0xFFFFFFFF, true);
+    }
+
     public void renderCameraAngle(GuiGraphicsExtractor guiGraphics, float tickDelta) {
         var client = Minecraft.getInstance();
         var height = client.getWindow().getGuiScaledHeight() - 37;

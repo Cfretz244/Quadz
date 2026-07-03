@@ -108,6 +108,14 @@ public interface MainConfigScreen {
         );
 
         visualsCategory.addEntry(
+                entryBuilder.startBooleanToggle(Component.translatable("quadz.config.visuals.coords_display_toggle"), Config.coordsDisplayEnabled)
+                        .setDefaultValue(Config.coordsDisplayEnabled)
+                        .setTooltip(Component.translatable("quadz.config.visuals.coords_display_toggle.tooltip"))
+                        .setSaveConsumer(value -> Config.coordsDisplayEnabled = value)
+                        .build()
+        );
+
+        visualsCategory.addEntry(
                 entryBuilder.startBooleanToggle(Component.translatable("quadz.config.visuals.stick_display_toggle"), Config.stickDisplayEnabled)
                         .setDefaultValue(Config.stickDisplayEnabled)
                         .setTooltip(Component.translatable("quadz.config.visuals.stick_display_toggle.tooltip"))

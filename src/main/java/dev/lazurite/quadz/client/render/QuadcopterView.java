@@ -67,6 +67,10 @@ public class QuadcopterView extends View implements View.Ticking {
                 this.osd.renderVelocity(guiGraphics, tickDelta);
             }
 
+            if (Config.coordsDisplayEnabled) {
+                this.osd.renderCoords(guiGraphics, tickDelta);
+            }
+
             if (Config.stickDisplayEnabled) {
                 this.osd.renderSticks(guiGraphics, tickDelta);
             }

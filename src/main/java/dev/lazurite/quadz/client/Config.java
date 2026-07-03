@@ -73,6 +73,7 @@ public class Config {
     public static boolean renderCameraInCenter = false;
     public static boolean osdEnabled = true;
     public static boolean speedDisplayEnabled = true;
+    public static boolean coordsDisplayEnabled = true;
     public static boolean stickDisplayEnabled = true;
     public static boolean cameraAngleDisplayEnabled = true;
     public static boolean fovDisplayEnabled = true;
@@ -146,6 +147,7 @@ public class Config {
         config.add("renderCameraInCenter", new JsonPrimitive(renderCameraInCenter));
         config.add("osdEnabled", new JsonPrimitive(osdEnabled));
         config.add("speedDisplayEnabled", new JsonPrimitive(speedDisplayEnabled));
+        config.add("coordsDisplayEnabled", new JsonPrimitive(coordsDisplayEnabled));
         config.add("stickDisplayEnabled", new JsonPrimitive(stickDisplayEnabled));
         config.add("cameraAngleDisplayEnabled", new JsonPrimitive(cameraAngleDisplayEnabled));
         config.add("fovDisplayEnabled", new JsonPrimitive(fovDisplayEnabled));
@@ -220,6 +222,7 @@ public class Config {
             osdEnabled = config.get("osdEnabled").getAsBoolean();
             // Guard newer keys so configs written by older versions still load.
             if (config.has("speedDisplayEnabled")) speedDisplayEnabled = config.get("speedDisplayEnabled").getAsBoolean();
+            if (config.has("coordsDisplayEnabled")) coordsDisplayEnabled = config.get("coordsDisplayEnabled").getAsBoolean();
             if (config.has("stickDisplayEnabled")) stickDisplayEnabled = config.get("stickDisplayEnabled").getAsBoolean();
             if (config.has("cameraAngleDisplayEnabled")) cameraAngleDisplayEnabled = config.get("cameraAngleDisplayEnabled").getAsBoolean();
             if (config.has("fovDisplayEnabled")) fovDisplayEnabled = config.get("fovDisplayEnabled").getAsBoolean();
