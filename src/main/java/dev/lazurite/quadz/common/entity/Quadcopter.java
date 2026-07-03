@@ -67,7 +67,16 @@ public class Quadcopter extends LivingEntity implements EntityPhysicsElement, Te
     // Underwater the drone uses the SIMPLE air-drag term at this fraction of its in-air strength
     // (with Rayon's heavy water drag suppressed), so water feels like a damped version of normal
     // flight rather than molasses or frictionless. First-pass value; tune by feel.
-    public static final float UNDERWATER_AIR_DRAG_FRACTION = 0.5f;
+    public static final float UNDERWATER_AIR_DRAG_FRACTION = 0.75f;
+
+    // Partial underwater buoyancy: fraction of the drone's weight counteracted by an upward force while
+    // submerged, so it sinks SLOWER than it would fall through air but still sinks (< 1.0 = still net
+    // downward; ~1.0 ≈ neutral). Feel knob — tune per tester. Applied as a smooth CENTRAL force (no
+    // torque, no per-triangle jitter) on both physics sides so the pilot's client-authoritative sim
+    // renders it (a server-only force wouldn't — cf. the waterDragScale networking fix).
+    public static final float UNDERWATER_BUOYANCY_FRACTION = 0.5f;
+    // Rayon's fixed physics-space gravity magnitude (MinecraftSpace sets gravity y = -9.807).
+    private static final float SPACE_GRAVITY = 9.807f;
 
     private final AnimatableInstanceCache cache = GeckoLibUtil.createInstanceCache(this);
     private final EntityRigidBody rigidBody = new EntityRigidBody(this);
@@ -140,6 +149,16 @@ public class Quadcopter extends LivingEntity implements EntityPhysicsElement, Te
                     this.getRigidBody().setDragCoefficient(inWater ? baseDrag * UNDERWATER_AIR_DRAG_FRACTION : baseDrag);
                 });
                 this.wasInWater = inWater;
+            }
+        }
+
+        // Partial buoyancy: while submerged, apply a smooth upward central force = weight * fraction so
+        // the drone sinks slower than in air (but still sinks). Runs on BOTH sides (not gated by
+        // isClientSide, like thrust) so the pilot's client-rendered sim gets it. Central => no torque.
+        if (this.isInWater() && UNDERWATER_BUOYANCY_FRACTION > 0.0f) {
+            final float lift = this.getRigidBody().getMass() * SPACE_GRAVITY * UNDERWATER_BUOYANCY_FRACTION;
+            if (Float.isFinite(lift)) {
+                this.getRigidBody().applyCentralForce(new Vector3f(0.0f, lift, 0.0f));
             }
         }
 
