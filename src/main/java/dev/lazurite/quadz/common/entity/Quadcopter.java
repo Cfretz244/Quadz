@@ -68,14 +68,14 @@ public class Quadcopter extends LivingEntity implements EntityPhysicsElement, Te
     // in-air drag strength, with Rayon's heavy per-triangle water drag suppressed. >1.0 means water is
     // draggier than air (natural — otherwise the drone accelerates harder and tops out FASTER
     // underwater than in air, since drag is its only speed limiter). Feel knob; tune by feel.
-    public static final float UNDERWATER_DRAG_MULTIPLIER = 5.0f;
+    public static final float UNDERWATER_DRAG_MULTIPLIER = 7.0f;
 
     // Partial underwater buoyancy: fraction of the drone's weight counteracted by an upward force while
     // submerged, so it sinks SLOWER than it would fall through air but still sinks (< 1.0 = still net
     // downward; ~1.0 ≈ neutral). Feel knob — tune per tester. Applied as a smooth CENTRAL force (no
     // torque, no per-triangle jitter) on both physics sides so the pilot's client-authoritative sim
     // renders it (a server-only force wouldn't — cf. the waterDragScale networking fix).
-    public static final float UNDERWATER_BUOYANCY_FRACTION = 0.5f;
+    public static final float UNDERWATER_BUOYANCY_FRACTION = 1.0f;
     // Rayon's fixed physics-space gravity magnitude (MinecraftSpace sets gravity y = -9.807).
     private static final float SPACE_GRAVITY = 9.807f;
 
