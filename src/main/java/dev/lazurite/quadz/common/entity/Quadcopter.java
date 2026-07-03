@@ -16,6 +16,7 @@ import dev.lazurite.quadz.common.util.RateProfile;
 import dev.lazurite.rayon.api.EntityPhysicsElement;
 import dev.lazurite.rayon.impl.bullet.collision.body.ElementRigidBody;
 import dev.lazurite.rayon.impl.bullet.collision.body.EntityRigidBody;
+import dev.lazurite.rayon.impl.bullet.collision.body.shape.MinecraftShape;
 import dev.lazurite.rayon.impl.bullet.math.Convert;
 import dev.lazurite.toolbox.api.math.QuaternionHelper;
 import dev.lazurite.toolbox.api.math.VectorHelper;
@@ -31,6 +32,7 @@ import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.InteractionResult;
 import net.minecraft.world.damagesource.DamageSource;
+import net.minecraft.world.phys.AABB;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.EquipmentSlot;
 import net.minecraft.world.entity.HumanoidArm;
@@ -96,6 +98,12 @@ public class Quadcopter extends LivingEntity implements EntityPhysicsElement, Te
     // (Drag reconfiguration is level-triggered, not edge-triggered — see tick().)
     private boolean wasInWater = false;
 
+    // Transient: the template the collision box was last (re)built for. The box isn't networked and is
+    // otherwise rebuilt only via a racy edge-triggered event the CLIENT can miss, so tick() re-applies
+    // the template box whenever this doesn't match the current template (retries until the template is
+    // loaded). Empty = not yet applied (e.g. fresh body after a rejoin).
+    private String appliedShapeTemplate = "";
+
     public Quadcopter(EntityType<? extends LivingEntity> entityType, Level level) {
         super(entityType, level);
         // 1.21.2: Entity.noCulling is gone; culling is disabled via
@@ -159,6 +167,25 @@ public class Quadcopter extends LivingEntity implements EntityPhysicsElement, Te
                 this.getRigidBody().setWaterDragScale(targetScale);
             }
         });
+
+        // Keep the collision box synced to the template on BOTH sides. The box drives the SIMPLE drag
+        // `area` AND terrain collision, but it is NEVER networked and is otherwise rebuilt only via a
+        // racy edge-triggered template event the CLIENT can miss — leaving the client measuring a
+        // different-sized box than the server → wrong drag → the intermittent over-speed (a smaller
+        // box = less drag = too fast). Re-apply the template box whenever it hasn't been built for the
+        // current template; retries each tick until the template is loaded, then applies once and is a
+        // no-op thereafter. Fresh bodies (e.g. after a rejoin) reset appliedShapeTemplate, so they
+        // re-sync here even if the edge-triggered event was missed.
+        if (!this.getTemplate().equals(this.appliedShapeTemplate)) {
+            TemplateLoader.getTemplateById(this.getTemplate()).ifPresent(template -> {
+                final var meta = template.metadata();
+                final float width = meta.get("width").getAsFloat();
+                final float height = meta.get("height").getAsFloat();
+                final float depth = meta.has("depth") ? meta.get("depth").getAsFloat() : width;
+                this.getRigidBody().setCollisionShape(MinecraftShape.box(new AABB(0, 0, 0, width, height, depth)));
+                this.appliedShapeTemplate = this.getTemplate();
+            });
+        }
 
         // Splash on the water->air EDGE (vanilla only splashes on ENTRY). Server-side so it broadcasts
         // to the pilot exactly like the entry splash.
