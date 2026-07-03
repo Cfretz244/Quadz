@@ -99,6 +99,32 @@ public interface MainConfigScreen {
                         .build()
         );
 
+        // HUD element toggles, ordered: stick overlays first, then the text readouts in the order
+        // they appear on screen top-to-bottom when all are enabled (FOV, camera angle, speed, coords).
+        visualsCategory.addEntry(
+                entryBuilder.startBooleanToggle(Component.translatable("quadz.config.visuals.stick_display_toggle"), Config.stickDisplayEnabled)
+                        .setDefaultValue(Config.stickDisplayEnabled)
+                        .setTooltip(Component.translatable("quadz.config.visuals.stick_display_toggle.tooltip"))
+                        .setSaveConsumer(value -> Config.stickDisplayEnabled = value)
+                        .build()
+        );
+
+        visualsCategory.addEntry(
+                entryBuilder.startBooleanToggle(Component.translatable("quadz.config.visuals.fov_display_toggle"), Config.fovDisplayEnabled)
+                        .setDefaultValue(Config.fovDisplayEnabled)
+                        .setTooltip(Component.translatable("quadz.config.visuals.fov_display_toggle.tooltip"))
+                        .setSaveConsumer(value -> Config.fovDisplayEnabled = value)
+                        .build()
+        );
+
+        visualsCategory.addEntry(
+                entryBuilder.startBooleanToggle(Component.translatable("quadz.config.visuals.camera_angle_display_toggle"), Config.cameraAngleDisplayEnabled)
+                        .setDefaultValue(Config.cameraAngleDisplayEnabled)
+                        .setTooltip(Component.translatable("quadz.config.visuals.camera_angle_display_toggle.tooltip"))
+                        .setSaveConsumer(value -> Config.cameraAngleDisplayEnabled = value)
+                        .build()
+        );
+
         visualsCategory.addEntry(
                 entryBuilder.startBooleanToggle(Component.translatable("quadz.config.visuals.speed_display_toggle"), Config.speedDisplayEnabled)
                         .setDefaultValue(Config.speedDisplayEnabled)
@@ -112,30 +138,6 @@ public interface MainConfigScreen {
                         .setDefaultValue(Config.coordsDisplayEnabled)
                         .setTooltip(Component.translatable("quadz.config.visuals.coords_display_toggle.tooltip"))
                         .setSaveConsumer(value -> Config.coordsDisplayEnabled = value)
-                        .build()
-        );
-
-        visualsCategory.addEntry(
-                entryBuilder.startBooleanToggle(Component.translatable("quadz.config.visuals.stick_display_toggle"), Config.stickDisplayEnabled)
-                        .setDefaultValue(Config.stickDisplayEnabled)
-                        .setTooltip(Component.translatable("quadz.config.visuals.stick_display_toggle.tooltip"))
-                        .setSaveConsumer(value -> Config.stickDisplayEnabled = value)
-                        .build()
-        );
-
-        visualsCategory.addEntry(
-                entryBuilder.startBooleanToggle(Component.translatable("quadz.config.visuals.camera_angle_display_toggle"), Config.cameraAngleDisplayEnabled)
-                        .setDefaultValue(Config.cameraAngleDisplayEnabled)
-                        .setTooltip(Component.translatable("quadz.config.visuals.camera_angle_display_toggle.tooltip"))
-                        .setSaveConsumer(value -> Config.cameraAngleDisplayEnabled = value)
-                        .build()
-        );
-
-        visualsCategory.addEntry(
-                entryBuilder.startBooleanToggle(Component.translatable("quadz.config.visuals.fov_display_toggle"), Config.fovDisplayEnabled)
-                        .setDefaultValue(Config.fovDisplayEnabled)
-                        .setTooltip(Component.translatable("quadz.config.visuals.fov_display_toggle.tooltip"))
-                        .setSaveConsumer(value -> Config.fovDisplayEnabled = value)
                         .build()
         );
 
