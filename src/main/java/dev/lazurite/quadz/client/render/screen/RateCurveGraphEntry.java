@@ -16,8 +16,9 @@ import java.util.function.Supplier;
 
 /**
  * Display-only config entry that plots the active rate curve(s) — output angular rate vs. stick input
- * across the full −1..1 range — so the user can see the shape of their tuning update live. When axes
- * are linked it draws one white curve; unlinked, it draws pitch/yaw/roll in three colors. The curve
+ * over the positive quadrant (stick 0..100%, rate 0..max, with halfway/full tick labels on each axis)
+ * — so the user can see the shape of their tuning update live. When axes are
+ * linked it draws one white curve; unlinked, it draws pitch/yaw/roll in three colors. The curve
  * data is pulled fresh each frame from a supplier (which reads the live config field entries), so it
  * redraws as values are typed. Not a real setting: {@link #getValue()} is a stable dummy and it never
  * saves anything.
@@ -64,44 +65,72 @@ public class RateCurveGraphEntry extends AbstractConfigListEntry<Object> {
             legendX += font.width(label) + 8;
         }
 
-        // Graph box.
-        int gx = x;
+        // Single positive quadrant: stick 0..1 along the bottom, rate 0..max up the left side. The
+        // rate curves are odd (symmetric through the origin), so the positive quadrant carries all the
+        // shape info and reads cleaner than a full centred plot.
+        final int yLabelGutter = 15;   // left room for the rate value labels
+        int gx = x + yLabelGutter;
         int gyTop = y + TITLE_GAP;
-        int gw = Math.max(20, Math.min(entryWidth - 2, 240));
+        int gw = Math.max(20, Math.min(entryWidth - yLabelGutter - 4, 240));
         int gh = GRAPH_HEIGHT;
         int gyBot = gyTop + gh;
-        int cx = gx + gw / 2;         // stick = 0
-        int cyMid = gyTop + gh / 2;   // rate  = 0
 
-        g.fill(gx, gyTop, gx + gw, gyBot, 0x40000000);          // backdrop
-        g.fill(gx, cyMid, gx + gw, cyMid + 1, 0x40FFFFFF);      // horizontal zero-rate axis
-        g.fill(cx, gyTop, cx + 1, gyBot, 0x40FFFFFF);           // vertical zero-stick axis
+        g.fill(gx, gyTop, gx + gw + 1, gyBot, 0x40000000);       // backdrop
+        g.fill(gx, gyTop, gx + 1, gyBot + 1, 0x80FFFFFF);        // left (rate) axis
+        g.fill(gx, gyBot, gx + gw + 1, gyBot + 1, 0x80FFFFFF);   // bottom (stick) axis
 
         // Normalise the y-scale to the largest full-deflection rate on screen so the curve shapes are
         // visible regardless of profile magnitude (Betaflight rates are ~1, Actual is hundreds).
         double max = 1e-6;
         for (CurveSpec c : curves) {
             max = Math.max(max, Math.abs(c.rateAt(1.0)));
-            max = Math.max(max, Math.abs(c.rateAt(-1.0)));
         }
+
+        // Tick marks (+ labels) at halfway and full on each axis.
+        int xMid = gx + gw / 2;
+        int xEnd = gx + gw;
+        int yMid = gyBot - gh / 2;
+        g.fill(xMid, gyBot, xMid + 1, gyBot + 3, 0x80FFFFFF);    // stick 50%
+        g.fill(xEnd, gyBot, xEnd + 1, gyBot + 3, 0x80FFFFFF);    // stick 100%
+        g.fill(gx - 3, yMid, gx, yMid + 1, 0x80FFFFFF);          // rate halfway
+        g.fill(gx - 3, gyTop, gx, gyTop + 1, 0x80FFFFFF);        // rate max
+        drawSmallLabel(g, "50%", xMid - 5, gyBot + 3);
+        drawSmallLabel(g, "100%", xEnd - 9, gyBot + 3);
+        drawSmallLabel(g, fmtRate(max / 2.0), x, yMid - 2);
+        drawSmallLabel(g, fmtRate(max), x, gyTop - 2);
 
         for (CurveSpec c : curves) {
             for (int col = 0; col <= gw; col++) {
-                double stick = (col / (double) gw) * 2.0 - 1.0;
-                double r = c.rateAt(stick);
+                double stick = col / (double) gw;               // 0..1
+                double r = Math.abs(c.rateAt(stick));
                 if (!Double.isFinite(r)) {
                     continue;
                 }
-                int py = (int) Math.round(cyMid - (r / max) * (gh / 2.0));
-                py = Math.max(gyTop, Math.min(gyBot - 1, py));
+                int py = (int) Math.round(gyBot - (r / max) * gh);
+                py = Math.max(gyTop, Math.min(gyBot, py));
                 g.fill(gx + col, py, gx + col + 1, py + 1, c.color() | 0xFF000000);
             }
         }
     }
 
+    /** Draws a half-size, semi-transparent axis label with its top-left at (px, py). */
+    private void drawSmallLabel(GuiGraphicsExtractor g, String text, int px, int py) {
+        var pose = g.pose();
+        pose.pushMatrix();
+        pose.translate(px, py);
+        pose.scale(0.5f, 0.5f);
+        g.text(font, Component.literal(text), 0, 0, 0xC0FFFFFF, false);
+        pose.popMatrix();
+    }
+
+    /** Rate-axis value: one decimal for small (Betaflight ~1–3), whole numbers for large (deg/s). */
+    private static String fmtRate(double v) {
+        return v >= 10.0 ? String.valueOf(Math.round(v)) : String.format(java.util.Locale.ROOT, "%.1f", v);
+    }
+
     @Override
     public int getItemHeight() {
-        return TITLE_GAP + GRAPH_HEIGHT + 6;
+        return TITLE_GAP + GRAPH_HEIGHT + 10; // +10 leaves room for the x-axis tick labels below the box
     }
 
     @Override
