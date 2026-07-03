@@ -22,6 +22,7 @@ import dev.lazurite.toolbox.api.math.VectorHelper;
 import net.minecraft.core.Direction;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.syncher.EntityDataAccessor;
+import net.minecraft.sounds.SoundEvents;
 import net.minecraft.network.syncher.EntityDataSerializers;
 import net.minecraft.network.syncher.SynchedEntityData;
 import net.minecraft.resources.Identifier;
@@ -149,6 +150,15 @@ public class Quadcopter extends LivingEntity implements EntityPhysicsElement, Te
                     this.getRigidBody().setWaterDragScale(inWater ? 0.0f : 1.0f);
                     this.getRigidBody().setDragCoefficient(inWater ? baseDrag * UNDERWATER_DRAG_MULTIPLIER : baseDrag);
                 });
+
+                // Splash on EXIT too (vanilla only splashes on water ENTRY). On a water->air transition
+                // play the same generic splash the entry uses, at the drone. Server-side, so it
+                // broadcasts to the pilot exactly like the entry splash.
+                if (!inWater) {
+                    this.playSound(SoundEvents.GENERIC_SPLASH, 0.8f,
+                            1.0f + (this.getRandom().nextFloat() - this.getRandom().nextFloat()) * 0.4f);
+                }
+
                 this.wasInWater = inWater;
             }
         }
