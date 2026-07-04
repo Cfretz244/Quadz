@@ -16,7 +16,6 @@ import dev.lazurite.quadz.common.util.RateProfile;
 import dev.lazurite.rayon.api.EntityPhysicsElement;
 import dev.lazurite.rayon.impl.bullet.collision.body.ElementRigidBody;
 import dev.lazurite.rayon.impl.bullet.collision.body.EntityRigidBody;
-import dev.lazurite.rayon.impl.bullet.collision.body.shape.MinecraftShape;
 import dev.lazurite.rayon.impl.bullet.math.Convert;
 import dev.lazurite.toolbox.api.math.QuaternionHelper;
 import dev.lazurite.toolbox.api.math.VectorHelper;
@@ -32,7 +31,6 @@ import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.InteractionResult;
 import net.minecraft.world.damagesource.DamageSource;
-import net.minecraft.world.phys.AABB;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.EquipmentSlot;
 import net.minecraft.world.entity.HumanoidArm;
@@ -94,15 +92,9 @@ public class Quadcopter extends LivingEntity implements EntityPhysicsElement, Te
     // honored by ServerEventHooks.onEntityTemplateChanged instead of the template default. Consumed once.
     private Integer pendingCameraAngle = null;
 
-    // Transient: last tick's submersion state, used to fire the water->air exit splash on the edge.
-    // (Drag reconfiguration is level-triggered, not edge-triggered — see tick().)
+    // Server-side, transient: last tick's submersion state, so we only reconfigure the body's drag on
+    // a water<->air transition instead of every tick (setDragCoefficient re-dirties body properties).
     private boolean wasInWater = false;
-
-    // Transient: the template the collision box was last (re)built for. The box isn't networked and is
-    // otherwise rebuilt only via a racy edge-triggered event the CLIENT can miss, so tick() re-applies
-    // the template box whenever this doesn't match the current template (retries until the template is
-    // loaded). Empty = not yet applied (e.g. fresh body after a rejoin).
-    private String appliedShapeTemplate = "";
 
     public Quadcopter(EntityType<? extends LivingEntity> entityType, Level level) {
         super(entityType, level);
@@ -143,64 +135,38 @@ public class Quadcopter extends LivingEntity implements EntityPhysicsElement, Te
             this.level().getEntities(this, this.getBoundingBox(), entity -> entity instanceof LivingEntity).forEach(entity -> {
                 entity.hurt(this.damageSources().flyIntoWall(), 2.0f);
             });
-        }
 
-        // Submersible drag reconfiguration. Underwater we suppress Rayon's heavy per-triangle water drag
-        // (waterDragScale 0) and instead scale the SIMPLE central drag to UNDERWATER_DRAG_MULTIPLIER of
-        // the in-air value; in air we restore both. This is LEVEL-triggered and runs on BOTH physics
-        // sides (like the buoyancy/thrust forces), which matters: the pilot renders their own
-        // client-authoritative sim, and the old server-only + edge-triggered version could leave the
-        // coefficient STUCK at the underwater value after a water dip or a rejoin (a missed edge never
-        // retried) — which showed up as the drone's air top speed being wrong (~sqrt(MULTIPLIER) off,
-        // e.g. the intermittent 300-vs-120 mph). Setting from the CURRENT water state every tick can't
-        // get stuck; we only write when the value actually changes, so we don't re-dirty (and re-
-        // broadcast) properties each tick.
-        final boolean inWater = this.isInWater();
-        TemplateLoader.getTemplateById(this.getTemplate()).ifPresent(template -> {
-            final float baseDrag = template.metadata().get("dragCoefficient").getAsFloat();
-            final float targetDrag = inWater ? baseDrag * UNDERWATER_DRAG_MULTIPLIER : baseDrag;
-            final float targetScale = inWater ? 0.0f : 1.0f;
-            if (this.getRigidBody().getDragCoefficient() != targetDrag) {
-                this.getRigidBody().setDragCoefficient(targetDrag);
-            }
-            if (this.getRigidBody().getWaterDragScale() != targetScale) {
-                this.getRigidBody().setWaterDragScale(targetScale);
-            }
-        });
+            // Submersible handling: underwater the drone should feel like a damped version of normal
+            // flight — not molasses (full water drag) and not frictionless. Rayon's water drag ignores
+            // the drag coefficient once its mass-based stopping-force clamp kicks in, so we suppress the
+            // water drag entirely (waterDragScale 0) and instead lean on the SIMPLE air-drag term scaled
+            // to UNDERWATER_DRAG_MULTIPLIER of the in-air drag. Out of water
+            // we restore full water drag and the template coefficient. Body stays on DragType.SIMPLE
+            // throughout; we only touch the setters on a transition (setDragCoefficient re-dirties props).
+            final boolean inWater = this.isInWater();
+            if (inWater != this.wasInWater) {
+                TemplateLoader.getTemplateById(this.getTemplate()).ifPresent(template -> {
+                    final float baseDrag = template.metadata().get("dragCoefficient").getAsFloat();
+                    this.getRigidBody().setWaterDragScale(inWater ? 0.0f : 1.0f);
+                    this.getRigidBody().setDragCoefficient(inWater ? baseDrag * UNDERWATER_DRAG_MULTIPLIER : baseDrag);
+                });
 
-        // Keep the collision box synced to the template on BOTH sides. The box drives the SIMPLE drag
-        // `area` AND terrain collision, but it is NEVER networked and is otherwise rebuilt only via a
-        // racy edge-triggered template event the CLIENT can miss — leaving the client measuring a
-        // different-sized box than the server → wrong drag → the intermittent over-speed (a smaller
-        // box = less drag = too fast). Re-apply the template box whenever it hasn't been built for the
-        // current template; retries each tick until the template is loaded, then applies once and is a
-        // no-op thereafter. Fresh bodies (e.g. after a rejoin) reset appliedShapeTemplate, so they
-        // re-sync here even if the edge-triggered event was missed.
-        if (!this.getTemplate().equals(this.appliedShapeTemplate)) {
-            TemplateLoader.getTemplateById(this.getTemplate()).ifPresent(template -> {
-                final var meta = template.metadata();
-                final float width = meta.get("width").getAsFloat();
-                final float height = meta.get("height").getAsFloat();
-                final float depth = meta.has("depth") ? meta.get("depth").getAsFloat() : width;
-                this.getRigidBody().setCollisionShape(MinecraftShape.box(new AABB(0, 0, 0, width, height, depth)));
-                this.appliedShapeTemplate = this.getTemplate();
-            });
-        }
+                // Splash on EXIT too (vanilla only splashes on water ENTRY). On a water->air transition
+                // play the same generic splash the entry uses, at the drone. Server-side, so it
+                // broadcasts to the pilot exactly like the entry splash.
+                if (!inWater) {
+                    this.playSound(SoundEvents.GENERIC_SPLASH, 0.8f,
+                            1.0f + (this.getRandom().nextFloat() - this.getRandom().nextFloat()) * 0.4f);
+                }
 
-        // Splash on the water->air EDGE (vanilla only splashes on ENTRY). Server-side so it broadcasts
-        // to the pilot exactly like the entry splash.
-        if (inWater != this.wasInWater) {
-            if (!inWater && !this.level().isClientSide()) {
-                this.playSound(SoundEvents.GENERIC_SPLASH, 0.8f,
-                        1.0f + (this.getRandom().nextFloat() - this.getRandom().nextFloat()) * 0.4f);
+                this.wasInWater = inWater;
             }
-            this.wasInWater = inWater;
         }
 
         // Partial buoyancy: while submerged, apply a smooth upward central force = weight * fraction so
         // the drone sinks slower than in air (but still sinks). Runs on BOTH sides (not gated by
         // isClientSide, like thrust) so the pilot's client-rendered sim gets it. Central => no torque.
-        if (inWater && UNDERWATER_BUOYANCY_FRACTION > 0.0f) {
+        if (this.isInWater() && UNDERWATER_BUOYANCY_FRACTION > 0.0f) {
             final float lift = this.getRigidBody().getMass() * SPACE_GRAVITY * UNDERWATER_BUOYANCY_FRACTION;
             if (Float.isFinite(lift)) {
                 this.getRigidBody().applyCentralForce(new Vector3f(0.0f, lift, 0.0f));
