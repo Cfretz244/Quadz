@@ -1,0 +1,19 @@
+{
+	"id" : "freestyle_five",
+	"name" : "Freestyle 5\"",
+	"author" : "BlueVista",
+	"modid" : "quadz",
+	"width" : 0.23,
+	"height" : 0.06,
+	"depth" : 0.23,
+	"dragWidth" : 0.55,
+	"dragHeight" : 0.3,
+	"dragDepth" : 0.55,
+	"cameraX" : 0.175,
+	"cameraY" : 0.08,
+ 	"mass" : 0.8,
+	"dragCoefficient" : 0.135,
+	"thrust" : 50,
+	"thrustCurve" : 1.0,
+	"cameraAngle" : 25
+}
